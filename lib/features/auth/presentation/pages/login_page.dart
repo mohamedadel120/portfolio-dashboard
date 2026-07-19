@@ -59,7 +59,13 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
-                onSubmitted: (_) => _passwordFocusNode.requestFocus(),
+                onSubmitted: (_) {
+                  if (_passwordController.text.isEmpty) {
+                    _passwordFocusNode.requestFocus();
+                  } else {
+                    _onLoginPressed();
+                  }
+                },
               ),
               const SizedBox(height: 16),
               TextField(
