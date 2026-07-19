@@ -31,6 +31,10 @@
 
   <title>Portfolio Admin</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Start fetching the app entrypoint immediately, in parallel with HTML
+       parsing, instead of waiting for flutter_bootstrap.js to discover it. -->
+  <link rel="preload" href="main.dart.js" as="script">
 </head>
 <body>
   <!--
