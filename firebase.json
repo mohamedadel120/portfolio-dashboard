@@ -1,0 +1,27 @@
+{
+  "hosting": {
+    "site": "muhammed-dashboard",
+    "public": "build/web",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(png|webp|jpg|jpeg|svg|ico|ttf|otf|mp4)",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=2592000, immutable" }
+        ]
+      },
+      {
+        "source": "**/*.@(js|mjs|wasm)",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=3600" }
+        ]
+      }
+    ]
+  }
+}
