@@ -10,8 +10,10 @@ import '../bloc/why_choose_me_state.dart';
 import '../../domain/entities/why_choose_me_entity.dart';
 import '../../data/models/why_choose_me_model.dart';
 
-// Curated icon choices for the picker. Rendering uses the raw codePoint so
-// existing Firestore values not in this list still display correctly.
+// Curated icon choices for the picker. Icons are only ever rendered by
+// selecting one of these const values (never constructed from a raw
+// codePoint at runtime), so the icon font tree-shaker can still strip
+// unused glyphs at build time.
 const Map<String, IconData> _iconOptions = {
   'Trending Up': Icons.trending_up_rounded,
   'Architecture': Icons.architecture_rounded,
@@ -29,7 +31,16 @@ const Map<String, IconData> _iconOptions = {
   'Design': Icons.design_services_rounded,
   'Analytics': Icons.analytics_rounded,
   'Schedule': Icons.schedule_rounded,
+  'Phone': Icons.phone_android_rounded,
+  'People': Icons.people_rounded,
 };
+
+IconData _resolveIcon(int codePoint) {
+  for (final icon in _iconOptions.values) {
+    if (icon.codePoint == codePoint) return icon;
+  }
+  return Icons.star_rounded;
+}
 
 class WhyChooseMePage extends StatefulWidget {
   const WhyChooseMePage({super.key});
@@ -223,7 +234,7 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
-                        IconData(item.icon, fontFamily: 'MaterialIcons'),
+                        _resolveIcon(item.icon),
                         color: item.color,
                         size: 20,
                       ),
