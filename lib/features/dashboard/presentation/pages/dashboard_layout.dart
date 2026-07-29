@@ -103,12 +103,6 @@ class _Sidebar extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppColors.primary, Color(0xFF0099BB)],
-              ),
-              borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
                   color: AppColors.primary.withValues(alpha: 0.45),
@@ -122,7 +116,7 @@ class _Sidebar extends StatelessWidget {
                 ),
               ],
             ),
-            child: const Icon(Icons.bolt_rounded, color: Colors.black, size: 22),
+            child: Image.asset('assets/images/logo.png'),
           ),
           const SizedBox(width: 12),
           Column(
