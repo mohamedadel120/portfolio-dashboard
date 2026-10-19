@@ -418,6 +418,29 @@ class IconActionButton extends StatelessWidget {
   }
 }
 
+/// Rebuilds with whether a mouse pointer is over the child. Touch devices
+/// never report hover, so nothing depends on it for function.
+class HoverBuilder extends StatefulWidget {
+  final Widget Function(BuildContext context, bool isHovered) builder;
+  const HoverBuilder({super.key, required this.builder});
+
+  @override
+  State<HoverBuilder> createState() => _HoverBuilderState();
+}
+
+class _HoverBuilderState extends State<HoverBuilder> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: widget.builder(context, _hovered),
+    );
+  }
+}
+
 /// Shows a confirm dialog for a destructive action. Returns true when the
 /// owner confirms.
 Future<bool> confirmDelete(

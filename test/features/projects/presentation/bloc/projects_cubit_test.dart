@@ -43,6 +43,11 @@ class _FakeDataSource implements ProjectsRemoteDataSource {
     if (errorToThrow != null) throw errorToThrow!;
     projectsToReturn = projectsToReturn.where((p) => p.id != id).toList();
   }
+
+  @override
+  Future<void> reorderProjects(List<String> orderedIds) async {
+    if (errorToThrow != null) throw errorToThrow!;
+  }
 }
 
 // ── Test fixtures ──────────────────────────────────────────────────────────────
@@ -274,5 +279,9 @@ class _FailOnWriteDataSource implements ProjectsRemoteDataSource {
 
   @override
   Future<void> deleteProject(String id) async =>
+      throw Exception('write permission denied');
+
+  @override
+  Future<void> reorderProjects(List<String> orderedIds) async =>
       throw Exception('write permission denied');
 }

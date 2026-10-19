@@ -8,7 +8,6 @@ import 'core/router/app_router.dart';
 import 'core/di/injection_container.dart' as di;
 import 'core/demo/demo_mode.dart';
 import 'features/auth/presentation/bloc/auth_cubit.dart';
-import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/dashboard/presentation/bloc/dashboard_cubit.dart';
 import 'features/projects/presentation/bloc/projects_cubit.dart';
 import 'features/expertise/presentation/bloc/expertise_cubit.dart';

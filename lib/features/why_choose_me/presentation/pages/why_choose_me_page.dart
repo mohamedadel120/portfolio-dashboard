@@ -1,8 +1,9 @@
-import 'dart:ui';
 import 'package:admin_dashboard/core/demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_dashboard/core/constants/app_colors.dart';
+import 'package:admin_dashboard/core/widgets/app_button.dart';
+import 'package:admin_dashboard/core/widgets/page_parts.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:admin_dashboard/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:admin_dashboard/features/auth/presentation/bloc/auth_state.dart';
@@ -77,95 +78,36 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: Padding(
-          padding: const EdgeInsets.all(32.0),
+          padding: const EdgeInsets.fromLTRB(40, 36, 40, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Why Choose Me',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              color: AppColors.ink,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Manage the selling points shown on your portfolio.',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(color: AppColors.textTertiary),
-                      ),
-                    ],
-                  ),
-                  StatefulBuilder(
-                    builder: (context, setState) {
-                      bool isHovered = false;
-                      return MouseRegion(
-                        onEnter: (_) => setState(() => isHovered = true),
-                        onExit: (_) => setState(() => isHovered = false),
-                        child: AnimatedScale(
-                          scale: isHovered ? 1.05 : 1.0,
-                          duration: const Duration(milliseconds: 200),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: isHovered
-                                  ? [
-                                      BoxShadow(
-                                        color: AppColors.primary.withValues(alpha: 0.4),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ]
-                                  : [],
-                            ),
-                            child: ElevatedButton.icon(
-                              onPressed: () => _showItemForm(context),
-                              icon: const Icon(Icons.add_rounded),
-                              label: const Text('Add Point'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: AppColors.onPrimary,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 28,
-                                  vertical: 18,
-                                ),
-                                textStyle: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                elevation: 0,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+              PageHeader(
+                title: 'Why choose me',
+                subtitle: 'The reasons to hire you, shown on the site.',
+                actions: [
+                  AppButton(
+                    label: 'Add point',
+                    icon: Icons.add_rounded,
+                    onPressed: () => _showItemForm(context),
                   ),
                 ],
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               Expanded(
                 child: BlocBuilder<WhyChooseMeCubit, WhyChooseMeState>(
                   builder: (context, state) {
                     if (state is WhyChooseMeLoading) {
                       return _buildShimmerLoading();
                     } else if (state is WhyChooseMeError) {
-                      return Center(
-                        child: Text(
-                          'Error: ${state.message}',
-                          style: const TextStyle(color: AppColors.danger),
-                        ),
+                      return EmptyState(
+                        icon: Icons.cloud_off_rounded,
+                        title: 'Could not load points',
+                        message: state.message,
+                        isError: true,
+                        actionLabel: 'Retry',
+                        actionIcon: Icons.refresh_rounded,
+                        onAction: () => context.read<WhyChooseMeCubit>().fetchItems(),
                       );
                     } else if (state is WhyChooseMeLoaded) {
                       if (state.items.isEmpty) {
@@ -205,21 +147,19 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
   }
 
   Widget _buildItemCard(WhyChooseMeItem item, BuildContext context) {
-    return StatefulBuilder(
-      builder: (context, setState) {
-        bool isHovered = false;
+    return HoverBuilder(
+      builder: (context, isHovered) {
         return MouseRegion(
-          onEnter: (_) => setState(() => isHovered = true),
-          onExit: (_) => setState(() => isHovered = false),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: isHovered ? AppColors.ink.withValues(alpha: 0.03) : AppColors.ink.withValues(alpha: 0.03),
+              color: AppColors.surface,
+              boxShadow: isHovered ? AppShadows.raised : AppShadows.card,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isHovered ? item.color.withValues(alpha: 0.5) : AppColors.border,
-                width: isHovered ? 1.5 : 1.0,
+                color: isHovered ? AppColors.borderStrong : AppColors.border,
+                width: 1,
               ),
             ),
             child: Column(
@@ -242,7 +182,7 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
                     ),
                     const Spacer(),
                     AnimatedOpacity(
-                      opacity: isHovered ? 1.0 : 0.2,
+                      opacity: isHovered ? 1.0 : 0.7,
                       duration: const Duration(milliseconds: 200),
                       child: Row(
                         children: [
@@ -273,7 +213,7 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
                   item.title,
                   style: TextStyle(
                     color: isHovered ? item.color : AppColors.ink,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 15,
                   ),
                   maxLines: 1,
@@ -298,8 +238,8 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
 
   Widget _buildShimmerLoading() {
     return Shimmer.fromColors(
-      baseColor: AppColors.border,
-      highlightColor: AppColors.border,
+      baseColor: AppColors.surfaceLight,
+      highlightColor: AppColors.surface,
       child: GridView.builder(
         padding: const EdgeInsets.all(24),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -312,7 +252,7 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
         itemBuilder: (context, index) {
           return Container(
             decoration: BoxDecoration(
-              color: AppColors.ink,
+              color: AppColors.surfaceLight,
               borderRadius: BorderRadius.circular(16),
             ),
           );
@@ -322,23 +262,13 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.stars_outlined, size: 64, color: AppColors.textTertiary),
-          const SizedBox(height: 16),
-          const Text(
-            'No selling points found',
-            style: TextStyle(color: AppColors.textTertiary, fontSize: 18),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Click "Add Point" to create your first selling point.',
-            style: TextStyle(color: AppColors.textTertiary),
-          ),
-        ],
-      ),
+    return EmptyState(
+      icon: Icons.emoji_events_outlined,
+      title: 'No points yet',
+      message: 'Add a reason to hire you and it will show on the site.',
+      actionLabel: 'Add point',
+      actionIcon: Icons.add_rounded,
+      onAction: () => _showItemForm(context),
     );
   }
 
@@ -359,7 +289,7 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.danger,
-              foregroundColor: AppColors.ink,
+              foregroundColor: Colors.white,
             ),
             onPressed: () {
               context.read<WhyChooseMeCubit>().deleteItem(item.id);
@@ -376,18 +306,16 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.6),
-      transitionDuration: const Duration(milliseconds: 300),
+      barrierColor: AppColors.ink.withValues(alpha: 0.32),
+      transitionDuration: AppMotion.of(context, AppMotion.slow),
       pageBuilder: (context, animation, secondaryAnimation) {
         return BlocProvider.value(
           value: context.read<WhyChooseMeCubit>(),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: FadeTransition(
+            opacity: CurvedAnimation(parent: animation, curve: AppMotion.ease),
             child: ScaleTransition(
-              scale: CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutBack,
-              ),
+              scale: Tween(begin: 0.96, end: 1.0).animate(
+                CurvedAnimation(parent: animation, curve: AppMotion.ease)),
               child: Dialog(
                 backgroundColor: Colors.transparent,
                 insetPadding: const EdgeInsets.all(32),
@@ -418,7 +346,7 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
   late int _selectedIcon;
 
   final List<Color> _colorPresets = [
-    const Color(0xFF00D9FF),
+    const Color(0xFF155E75),
     const Color(0xFF4CAF50),
     const Color(0xFFFF9800),
     const Color(0xFFE91E63),
@@ -436,7 +364,7 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
 
     String hexColor = widget.item != null
         ? widget.item!.color.value.toRadixString(16).substring(2).toUpperCase()
-        : '00D9FF';
+        : '155E75';
     _colorController = TextEditingController(text: hexColor);
   }
 
@@ -477,12 +405,6 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 14),
-      filled: true,
-      fillColor: AppColors.ink.withValues(alpha: 0.03),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
     );
   }
 
@@ -491,23 +413,17 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
     return Container(
       width: 620,
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 40,
-            spreadRadius: 5,
-          ),
-        ],
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.raised,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: EdgeInsets.zero,
           child: Padding(
-            padding: const EdgeInsets.all(32.0),
+            padding: const EdgeInsets.all(28.0),
             child: Form(
               key: _formKey,
               child: SingleChildScrollView(
@@ -521,20 +437,23 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
                         Text(
                           widget.item == null ? 'Add Selling Point' : 'Edit Selling Point',
                           style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 19,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.ink,
+                            letterSpacing: -0.4,
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.close_rounded, color: AppColors.textTertiary),
+                        IconActionButton(
+                          icon: Icons.close_rounded,
+                          tooltip: 'Close',
+                          size: 36,
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
                     ),
                     const Divider(color: AppColors.border, height: 32),
 
-                    const Text('Title *', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                    const Text('Title *', style: TextStyle(color: AppColors.ink, fontSize: 13.5, fontWeight: FontWeight.w500)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _titleController,
@@ -544,7 +463,7 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
                     ),
                     const SizedBox(height: 20),
 
-                    const Text('Description *', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                    const Text('Description *', style: TextStyle(color: AppColors.ink, fontSize: 13.5, fontWeight: FontWeight.w500)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _descriptionController,
@@ -555,7 +474,7 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
                     ),
                     const SizedBox(height: 20),
 
-                    const Text('Icon', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                    const Text('Icon', style: TextStyle(color: AppColors.ink, fontSize: 13.5, fontWeight: FontWeight.w500)),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 10,
@@ -590,7 +509,7 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
                     ),
                     const SizedBox(height: 20),
 
-                    const Text('Display Color (Hex)', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                    const Text('Display Color (Hex)', style: TextStyle(color: AppColors.ink, fontSize: 13.5, fontWeight: FontWeight.w500)),
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -601,13 +520,7 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
                             decoration: InputDecoration(
                               prefixText: '# ',
                               prefixStyle: const TextStyle(color: AppColors.textTertiary),
-                              hintText: '00D9FF',
-                              hintStyle: const TextStyle(color: AppColors.textTertiary),
-                              filled: true,
-                              fillColor: AppColors.ink.withValues(alpha: 0.03),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
-                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
-                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
+                              hintText: '155E75',
                             ),
                             validator: (v) {
                               if (v == null || v.trim().isEmpty) return 'Color is required';
@@ -649,26 +562,21 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 28),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        TextButton(
+                        AppButton(
+                          label: 'Cancel',
+                          variant: AppButtonVariant.ghost,
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel', style: TextStyle(color: AppColors.textTertiary)),
                         ),
-                        const SizedBox(width: 16),
-                        ElevatedButton(
+                        const SizedBox(width: 8),
+                        AppButton(
+                          label: widget.item == null ? 'Create Point' : 'Save Changes',
+                          icon: Icons.check_rounded,
                           onPressed: _save,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: AppColors.onPrimary,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                            textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: Text(widget.item == null ? 'Create Point' : 'Save Changes'),
                         ),
                       ],
                     ),

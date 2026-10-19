@@ -1,10 +1,10 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:admin_dashboard/core/constants/app_colors.dart';
+import 'package:admin_dashboard/core/demo/demo_mode.dart';
 
 class MultipleImageUploadField extends StatefulWidget {
   final String label;
@@ -30,6 +30,11 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
   int? _hoveredImageIndex;
 
   Future<void> _pickAndUploadImages() async {
+    if (demoMode) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Uploads are turned off in demo mode.')));
+      return;
+    }
     try {
       final List<XFile> images = await _picker.pickMultiImage(
         imageQuality: 60,
@@ -108,13 +113,13 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                 Expanded(
                   child: Text(
                     '${widget.label} (${images.length})',
-                    style: const TextStyle(fontSize: 14, color: AppColors.textTertiary),
+                    style: const TextStyle(fontSize: 14, color: AppColors.ink, fontWeight: FontWeight.w500),
                   ),
                 ),
                 TextButton.icon(
                   onPressed: _isUploading ? null : _pickAndUploadImages,
                   icon: const Icon(Icons.add_photo_alternate, size: 18),
-                  label: const Text('Add Images'),
+                  label: const Text('Add images'),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.primary,
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
@@ -137,12 +142,12 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                     decoration: BoxDecoration(
                       color: _isHoveringDropzone 
                           ? AppColors.primary.withValues(alpha: 0.08) 
-                          : AppColors.ink.withValues(alpha: 0.03),
+                          : AppColors.background,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: _isHoveringDropzone
                             ? AppColors.primary.withValues(alpha: 0.5)
-                            : AppColors.border,
+                            : AppColors.borderStrong,
                       ),
                     ),
                     child: Center(
@@ -174,7 +179,7 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                 duration: const Duration(milliseconds: 300),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.ink.withValues(alpha: 0.03),
+                  color: AppColors.background,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.border),
                 ),
@@ -194,19 +199,16 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                           duration: const Duration(milliseconds: 200),
                           width: 100,
                           height: 140,
-                          transform: isHovered 
-                              ? (Matrix4.identity()..scale(1.05)) 
-                              : Matrix4.identity(),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isHovered ? AppColors.primary.withValues(alpha: 0.8) : AppColors.textTertiary,
+                              color: isHovered ? AppColors.borderStrong : AppColors.border,
                             ),
                             boxShadow: isHovered 
                                 ? [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.3),
-                                      blurRadius: 10,
+                                      color: AppColors.ink.withValues(alpha: 0.12),
+                                      blurRadius: 12,
                                       offset: const Offset(0, 4),
                                     )
                                   ]
@@ -229,22 +231,23 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                                   opacity: isHovered ? 1.0 : 0.0,
                                   duration: const Duration(milliseconds: 200),
                                   child: Container(
-                                    color: Colors.black.withValues(alpha: 0.6),
+                                    color: AppColors.ink.withValues(alpha: 0.18),
                                   ),
                                 ),
                                 
-                                // Delete Button
-                                if (isHovered)
-                                  Center(
+                                // Delete button: always visible (works on touch)
+                                Positioned(
+                                    top: 6,
+                                    right: 6,
                                     child: Material(
-                                      color: AppColors.danger.withValues(alpha: 0.9),
+                                      color: AppColors.surface,
                                       shape: const CircleBorder(),
                                       child: InkWell(
                                         onTap: () => _removeImage(idx),
                                         customBorder: const CircleBorder(),
                                         child: const Padding(
-                                          padding: EdgeInsets.all(8.0),
-                                          child: Icon(Icons.delete_outline, size: 20, color: AppColors.ink),
+                                          padding: EdgeInsets.all(5.0),
+                                          child: Icon(Icons.delete_outline, size: 16, color: AppColors.danger),
                                         ),
                                       ),
                                     ),
@@ -260,9 +263,9 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                         width: 100,
                         height: 140,
                         decoration: BoxDecoration(
-                          color: Colors.black45,
+                          color: AppColors.surface,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.primary),
+                          border: Border.all(color: AppColors.border),
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
