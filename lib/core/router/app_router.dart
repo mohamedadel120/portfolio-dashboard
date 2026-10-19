@@ -12,6 +12,7 @@ import '../../features/testimonials/presentation/pages/testimonials_page.dart';
 import '../../features/why_choose_me/presentation/pages/why_choose_me_page.dart';
 import '../../features/profile_info/presentation/pages/profile_info_page.dart';
 import 'dart:async';
+import '../demo/demo_mode.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -39,6 +40,8 @@ GoRouter createRouter(AuthCubit authCubit) {
     initialLocation: '/',
     refreshListenable: GoRouterRefreshStream(authCubit.stream),
     redirect: (context, state) {
+      // Demo mode has no auth gate: every route, /login included, is open.
+      if (demoMode) return null;
       final authState = authCubit.state;
       final isGoingToLogin = state.matchedLocation == '/login';
       

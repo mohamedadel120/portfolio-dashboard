@@ -68,7 +68,7 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Upload failed: $e'),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: AppColors.danger,
           ),
         );
       }
@@ -94,9 +94,9 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.6),
+        color: Colors.black.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white24, width: 0.5),
+        border: Border.all(color: AppColors.textTertiary, width: 0.5),
       ),
       child: IconButton(
         icon: Icon(icon, color: color, size: 20),
@@ -126,7 +126,7 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
               widget.label,
               style: const TextStyle(
                 fontSize: 14,
-                color: Colors.white70,
+                color: AppColors.textSecondary,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0.3,
               ),
@@ -149,15 +149,15 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: _isHovering
-                        ? Colors.white.withOpacity(0.08)
-                        : Colors.white.withOpacity(0.04),
+                        ? AppColors.border
+                        : AppColors.ink.withValues(alpha: 0.03),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: hasImage
                           ? AppColors.primary.withOpacity(
                               _isHovering ? 0.8 : 0.5,
                             )
-                          : (_isHovering ? Colors.white38 : Colors.white12),
+                          : (_isHovering ? AppColors.textTertiary : AppColors.border),
                       width: hasImage ? 2 : 1,
                     ),
                   ),
@@ -203,7 +203,7 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                             child: Text(
                               'Local asset path saved.\nPlease upload a new image.',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white54),
+                              style: TextStyle(color: AppColors.textTertiary),
                             ),
                           ),
 
@@ -217,7 +217,7 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
                                   color: _isHovering
-                                      ? AppColors.primary.withOpacity(0.15)
+                                      ? AppColors.primary.withValues(alpha: 0.15)
                                       : Colors.transparent,
                                   shape: BoxShape.circle,
                                 ),
@@ -226,7 +226,7 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                                   size: 40,
                                   color: _isHovering
                                       ? AppColors.primary
-                                      : Colors.white54,
+                                      : AppColors.textTertiary,
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -234,8 +234,8 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                                 duration: const Duration(milliseconds: 300),
                                 style: TextStyle(
                                   color: _isHovering
-                                      ? Colors.white
-                                      : Colors.white54,
+                                      ? AppColors.ink
+                                      : AppColors.textTertiary,
                                   fontWeight: _isHovering
                                       ? FontWeight.w600
                                       : FontWeight.normal,
@@ -260,7 +260,7 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                                 Text(
                                   'Uploading... ${(_uploadProgress * 100).toStringAsFixed(0)}%',
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.ink,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.5,
                                   ),
@@ -281,14 +281,14 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                                 children: [
                                   _buildActionButton(
                                     icon: Icons.edit_rounded,
-                                    color: Colors.white,
+                                    color: AppColors.ink,
                                     onPressed: _pickAndUploadImage,
                                     tooltip: 'Replace Image',
                                   ),
                                   const SizedBox(width: 8),
                                   _buildActionButton(
                                     icon: Icons.delete_rounded,
-                                    color: Colors.redAccent,
+                                    color: AppColors.danger,
                                     onPressed: _removeImage,
                                     tooltip: 'Remove Image',
                                   ),

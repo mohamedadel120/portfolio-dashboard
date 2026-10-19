@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:admin_dashboard/core/demo/demo_mode.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:shimmer/shimmer.dart';
@@ -21,7 +22,7 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     final authState = context.read<AuthCubit>().state;
-    if (authState is Authenticated) {
+    if (demoMode || authState is Authenticated) {
       final state = context.read<DashboardCubit>().state;
       if (state is DashboardInitial || state is DashboardError) {
         context.read<DashboardCubit>().startWatchingAnalytics();
@@ -59,8 +60,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildShimmer() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withValues(alpha: 0.04),
-      highlightColor: Colors.white.withValues(alpha: 0.12),
+      baseColor: AppColors.ink.withValues(alpha: 0.03),
+      highlightColor: AppColors.border,
       child: ListView(
         padding: const EdgeInsets.all(32),
         children: [
@@ -69,14 +70,14 @@ class _DashboardPageState extends State<DashboardPage> {
               height: 36,
               width: 220,
               decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.ink,
                   borderRadius: BorderRadius.circular(10))),
           const SizedBox(height: 8),
           Container(
               height: 18,
               width: 340,
               decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.ink,
                   borderRadius: BorderRadius.circular(6))),
           const SizedBox(height: 32),
           Row(
@@ -87,7 +88,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   height: 130,
                   margin: EdgeInsets.only(right: i < 2 ? 20 : 0),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.ink,
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
@@ -98,7 +99,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Container(
             height: 420,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.ink,
               borderRadius: BorderRadius.circular(20),
             ),
           ),
@@ -109,7 +110,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: Container(
                   height: 320,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.ink,
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
@@ -119,7 +120,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: Container(
                   height: 320,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.ink,
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
@@ -143,24 +144,24 @@ class _DashboardPageState extends State<DashboardPage> {
             height: 72,
             decoration: BoxDecoration(
               gradient: RadialGradient(colors: [
-                Colors.redAccent.withValues(alpha: 0.15),
+                AppColors.danger.withValues(alpha: 0.15),
                 Colors.transparent,
               ]),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.cloud_off_rounded,
-                size: 32, color: Colors.redAccent),
+                size: 32, color: AppColors.danger),
           ),
           const SizedBox(height: 16),
           const Text('Failed to load analytics',
               style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.ink,
                   fontSize: 17,
                   fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
           Text(message,
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.38), fontSize: 13)),
+                  color: AppColors.textTertiary, fontSize: 13)),
           const SizedBox(height: 24),
           OutlinedButton.icon(
             onPressed: () =>
@@ -253,7 +254,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       Text(
                         '$greeting 👋',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.45),
+                          color: AppColors.textTertiary,
                           fontSize: 13,
                         ),
                       ),
@@ -262,7 +263,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                          color: AppColors.ink,
                           letterSpacing: -0.5,
                           height: 1.1,
                         ),
@@ -281,10 +282,10 @@ class _DashboardPageState extends State<DashboardPage> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
-            color: const Color(0xFF4ADE80).withValues(alpha: 0.08),
+            color: AppColors.success.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-                color: const Color(0xFF4ADE80).withValues(alpha: 0.25)),
+                color: AppColors.success.withValues(alpha: 0.25)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -293,7 +294,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 width: 7,
                 height: 7,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF4ADE80),
+                  color: AppColors.success,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -301,7 +302,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const Text(
                 'Live data',
                 style: TextStyle(
-                  color: Color(0xFF4ADE80),
+                  color: AppColors.success,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -343,7 +344,7 @@ class _DashboardPageState extends State<DashboardPage> {
             title: 'Total Clicks',
             value: analytics.totalClicks.toString(),
             icon: Icons.touch_app_rounded,
-            color: Colors.orangeAccent,
+            color: AppColors.warning,
             subtitle: 'Interactions tracked',
           ),
         ),
@@ -422,9 +423,9 @@ class _PeriodToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: AppColors.ink.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -459,7 +460,7 @@ class _PeriodToggle extends StatelessWidget {
                       active ? FontWeight.w700 : FontWeight.w500,
                   color: active
                       ? AppColors.primary
-                      : Colors.white.withValues(alpha: 0.4),
+                      : AppColors.textTertiary,
                   letterSpacing: 0.2,
                 ),
               ),
@@ -536,7 +537,7 @@ class _StatCardState extends State<_StatCard>
               end: Alignment.bottomRight,
               colors: [
                 widget.color.withValues(alpha: 0.35 + 0.25 * _anim.value),
-                Colors.white.withValues(alpha: 0.07),
+                AppColors.border,
                 Colors.transparent,
               ],
               stops: const [0.0, 0.5, 1.0],
@@ -605,7 +606,7 @@ class _StatCardState extends State<_StatCard>
                           widget.title,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.42),
+                            color: AppColors.textTertiary,
                             fontWeight: FontWeight.w500,
                             letterSpacing: 0.3,
                           ),
@@ -620,7 +621,7 @@ class _StatCardState extends State<_StatCard>
                                       LinearGradient(
                                     colors: [
                                       widget.color,
-                                      Colors.white,
+                                      AppColors.ink,
                                     ],
                                   ).createShader(bounds),
                                   child: Text(
@@ -629,7 +630,7 @@ class _StatCardState extends State<_StatCard>
                                     style: const TextStyle(
                                       fontSize: 36,
                                       fontWeight: FontWeight.w800,
-                                      color: Colors.white,
+                                      color: AppColors.ink,
                                       letterSpacing: -1.5,
                                       height: 1,
                                     ),
@@ -641,7 +642,7 @@ class _StatCardState extends State<_StatCard>
                                   style: const TextStyle(
                                     fontSize: 36,
                                     fontWeight: FontWeight.w800,
-                                    color: Colors.white,
+                                    color: AppColors.ink,
                                     letterSpacing: -1.5,
                                     height: 1,
                                   ),
@@ -652,7 +653,7 @@ class _StatCardState extends State<_StatCard>
                           widget.subtitle,
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.white.withValues(alpha: 0.26),
+                            color: AppColors.textTertiary,
                           ),
                         ),
                       ],
@@ -720,9 +721,9 @@ class _ChartPanel extends StatelessWidget {
       height: height,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.02),
+        color: AppColors.ink.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -749,7 +750,7 @@ class _ChartPanel extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: AppColors.ink,
                       letterSpacing: 0.1,
                     ),
                   ),
@@ -757,7 +758,7 @@ class _ChartPanel extends StatelessWidget {
                     subtitle,
                     style: TextStyle(
                       fontSize: 11,
-                      color: Colors.white.withValues(alpha: 0.35),
+                      color: AppColors.textTertiary,
                     ),
                   ),
                 ],
@@ -765,7 +766,7 @@ class _ChartPanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          Divider(color: Colors.white.withValues(alpha: 0.06), height: 1),
+          Divider(color: AppColors.border, height: 1),
           const SizedBox(height: 20),
           if (height != null) Expanded(child: child) else child,
         ],
@@ -802,13 +803,13 @@ class _TopProjectRow extends StatelessWidget {
                 style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white),
+                    color: AppColors.ink),
               ),
               Text(
                 '$clicks interactions',
                 style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.38)),
+                    color: AppColors.textTertiary),
               ),
             ],
           ),
@@ -819,7 +820,7 @@ class _TopProjectRow extends StatelessWidget {
               children: [
                 Container(
                   height: 6,
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: AppColors.border,
                 ),
                 FractionallySizedBox(
                   widthFactor: percentage,
@@ -862,7 +863,7 @@ class _LineChartWidget extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: 50,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: AppColors.ink.withValues(alpha: 0.03),
             strokeWidth: 1,
           ),
         ),
@@ -889,7 +890,7 @@ class _LineChartWidget extends StatelessWidget {
                     style: TextStyle(
                         color: isToday
                             ? AppColors.primary
-                            : Colors.white.withValues(alpha: 0.35),
+                            : AppColors.textTertiary,
                         fontSize: 11,
                         fontWeight: isToday
                             ? FontWeight.w600
@@ -907,7 +908,7 @@ class _LineChartWidget extends StatelessWidget {
               getTitlesWidget: (value, meta) => Text(
                 value.toInt().toString(),
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.3), fontSize: 11),
+                    color: AppColors.textTertiary, fontSize: 11),
               ),
             ),
           ),
@@ -953,7 +954,7 @@ class _LineChartWidget extends StatelessWidget {
                 .map((s) => LineTooltipItem(
                       '${s.y.toInt()} visits',
                       const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.ink,
                           fontWeight: FontWeight.w600,
                           fontSize: 13),
                     ))
@@ -974,9 +975,9 @@ class _PieChartWidget extends StatelessWidget {
   static const _colors = [
     AppColors.primary,
     AppColors.secondary,
-    Colors.orangeAccent,
+    AppColors.warning,
     Colors.pinkAccent,
-    Colors.greenAccent,
+    AppColors.success,
     Colors.purpleAccent,
   ];
 
@@ -986,7 +987,7 @@ class _PieChartWidget extends StatelessWidget {
       return Center(
         child: Text('No data yet',
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.35), fontSize: 14)),
+                color: AppColors.textTertiary, fontSize: 14)),
       );
     }
 
@@ -1001,7 +1002,7 @@ class _PieChartWidget extends StatelessWidget {
         title: '${pct.toStringAsFixed(0)}%',
         radius: 56,
         titleStyle: const TextStyle(
-            fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+            fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.ink),
         badgeWidget: _PieBadge(label: e.key, color: color),
         badgePositionPercentageOffset: 1.45,
       );
@@ -1035,7 +1036,7 @@ class _PieBadge extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(label,
-          style: const TextStyle(fontSize: 10, color: Colors.white70)),
+          style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
     );
   }
 }
@@ -1052,7 +1053,7 @@ class _BarChartWidget extends StatelessWidget {
       return Center(
         child: Text('No data yet',
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.35), fontSize: 14)),
+                color: AppColors.textTertiary, fontSize: 14)),
       );
     }
 
@@ -1091,7 +1092,7 @@ class _BarChartWidget extends StatelessWidget {
             getTooltipItem: (group, gi, rod, ri) => BarTooltipItem(
               '${rod.toY.toInt()} actions',
               const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.ink,
                   fontWeight: FontWeight.w600,
                   fontSize: 13),
             ),
@@ -1109,7 +1110,7 @@ class _BarChartWidget extends StatelessWidget {
                   child: Text(
                     data.keys.elementAt(idx),
                     style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: AppColors.textTertiary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600),
                   ),
@@ -1130,7 +1131,7 @@ class _BarChartWidget extends StatelessWidget {
           horizontalInterval:
               maxVal > 0 ? (maxVal / 4).ceilToDouble() : 1,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: AppColors.ink.withValues(alpha: 0.03),
             strokeWidth: 1,
           ),
         ),

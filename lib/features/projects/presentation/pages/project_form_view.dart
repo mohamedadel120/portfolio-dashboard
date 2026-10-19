@@ -1,28 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:admin_dashboard/core/constants/app_colors.dart';
+import 'package:admin_dashboard/core/widgets/app_button.dart';
 import 'package:admin_dashboard/core/widgets/image_upload_field.dart';
 import 'package:admin_dashboard/core/widgets/multiple_image_upload_field.dart';
+import 'package:admin_dashboard/core/widgets/page_parts.dart';
+import 'package:admin_dashboard/core/widgets/pressable.dart';
 
 import '../../domain/entities/project_entity.dart';
+import '../../domain/project_slug.dart';
 import '../bloc/projects_cubit.dart';
 import '../bloc/projects_state.dart';
+import '../widgets/project_badges.dart';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const _kPresetColors = [
-  Color(0xFF00D9FF), // cyan
-  Color(0xFF7B2CBF), // purple
+  Color(0xFF155E75), // teal
+  Color(0xFF2563EB), // blue
   Color(0xFF6366F1), // indigo
-  Color(0xFF4ADE80), // green
-  Color(0xFFFBBF24), // amber
-  Color(0xFFF97316), // orange
-  Color(0xFFEF4444), // red
-  Color(0xFFEC4899), // pink
+  Color(0xFF7C3AED), // violet
+  Color(0xFF0F9D58), // green
+  Color(0xFFD97706), // amber
+  Color(0xFFE4572E), // orange
+  Color(0xFFDB2777), // pink
 ];
 
-enum _Tab { basic, media, links }
+enum _Tab { basic, caseStudy, media, links }
+
+const _highlightHelp =
+    'One short sentence. Only facts you can stand behind.';
+const _storyHelp = 'Leave empty to hide this part on the site.';
 
 // ── Main widget ────────────────────────────────────────────────────────────────
 
@@ -34,8 +44,7 @@ class ProjectFormView extends StatefulWidget {
   State<ProjectFormView> createState() => _ProjectFormViewState();
 }
 
-class _ProjectFormViewState extends State<ProjectFormView>
-    with SingleTickerProviderStateMixin {
+class _ProjectFormViewState extends State<ProjectFormView> {
   final _formKey = GlobalKey<FormState>();
   bool _isSaving = false;
   _Tab _activeTab = _Tab.basic;
@@ -50,57 +59,67 @@ class _ProjectFormViewState extends State<ProjectFormView>
   late final TextEditingController _androidUrlController;
   late final TextEditingController _iosUrlController;
   late final TextEditingController _videoUrlController;
+  late final TextEditingController _highlightController;
+  late final TextEditingController _problemController;
+  late final TextEditingController _roleController;
+  late final TextEditingController _outcomeController;
+  late final TextEditingController _slugController;
   late final ValueNotifier<List<String>> _galleryNotifier;
+  late bool _featured;
 
   Color _previewColor = AppColors.primary;
 
   @override
   void initState() {
     super.initState();
-    _titleController =
-        TextEditingController(text: widget.project?.title ?? '');
-    _descController =
-        TextEditingController(text: widget.project?.description ?? '');
-    _techController =
-        TextEditingController(text: widget.project?.tech.join(', ') ?? '');
-    _downloadsController =
-        TextEditingController(text: widget.project?.downloads ?? '');
+    final p = widget.project;
+    _titleController = TextEditingController(text: p?.title ?? '');
+    _descController = TextEditingController(text: p?.description ?? '');
+    _techController = TextEditingController(text: p?.tech.join(', ') ?? '');
+    _downloadsController = TextEditingController(text: p?.downloads ?? '');
 
-    final hex = widget.project != null
-        ? _colorToHex(widget.project!.color)
-        : '00D9FF';
+    final hex = p != null ? _colorToHex(p.color) : '155E75';
     _colorController = TextEditingController(text: hex);
     _previewColor = _parseHex(hex) ?? AppColors.primary;
 
-    _imageUrlController =
-        TextEditingController(text: widget.project?.imageUrl ?? '');
-    _logoUrlController =
-        TextEditingController(text: widget.project?.logoUrl ?? '');
+    _imageUrlController = TextEditingController(text: p?.imageUrl ?? '');
+    _logoUrlController = TextEditingController(text: p?.logoUrl ?? '');
     _androidUrlController =
-        TextEditingController(text: widget.project?.androidStoreUrl ?? '');
-    _iosUrlController =
-        TextEditingController(text: widget.project?.iosStoreUrl ?? '');
-    _videoUrlController =
-        TextEditingController(text: widget.project?.videoUrl ?? '');
+        TextEditingController(text: p?.androidStoreUrl ?? '');
+    _iosUrlController = TextEditingController(text: p?.iosStoreUrl ?? '');
+    _videoUrlController = TextEditingController(text: p?.videoUrl ?? '');
+    _highlightController = TextEditingController(text: p?.highlight ?? '');
+    _problemController = TextEditingController(text: p?.problem ?? '');
+    _roleController = TextEditingController(text: p?.role ?? '');
+    _outcomeController = TextEditingController(text: p?.outcome ?? '');
+    _slugController = TextEditingController(text: p?.slug ?? '');
+    _featured = p?.featured ?? false;
     _galleryNotifier = ValueNotifier<List<String>>(
-      widget.project?.galleryImages != null
-          ? List.from(widget.project!.galleryImages!)
-          : [],
+      p?.galleryImages != null ? List.from(p!.galleryImages!) : [],
     );
   }
 
   @override
   void dispose() {
-    _titleController.dispose();
-    _descController.dispose();
-    _techController.dispose();
-    _downloadsController.dispose();
-    _colorController.dispose();
-    _imageUrlController.dispose();
-    _logoUrlController.dispose();
-    _androidUrlController.dispose();
-    _iosUrlController.dispose();
-    _videoUrlController.dispose();
+    for (final c in [
+      _titleController,
+      _descController,
+      _techController,
+      _downloadsController,
+      _colorController,
+      _imageUrlController,
+      _logoUrlController,
+      _androidUrlController,
+      _iosUrlController,
+      _videoUrlController,
+      _highlightController,
+      _problemController,
+      _roleController,
+      _outcomeController,
+      _slugController,
+    ]) {
+      c.dispose();
+    }
     _galleryNotifier.dispose();
     super.dispose();
   }
@@ -135,14 +154,59 @@ class _ProjectFormViewState extends State<ProjectFormView>
     setState(() => _previewColor = color);
   }
 
+  String? _nonBlank(TextEditingController c) {
+    final t = c.text.trim();
+    return t.isEmpty ? null : t;
+  }
+
+  // ── Slug / case study URL ──────────────────────────────────────────────────
+
+  /// The slug the site will use for this project once saved, accounting for
+  /// the other projects (a repeated slug gets -2, -3, ... like on the site).
+  ({String slug, bool generated, bool deduped}) _resolvedSlug() {
+    final title = _titleController.text.trim();
+    final own = ProjectSlug.clean(_slugController.text);
+    final base = ProjectSlug.effective(slug: _slugController.text, title: title);
+
+    final state = context.read<ProjectsCubit>().state;
+    final others = state is ProjectsLoaded
+        ? state.projects.where((p) => p.id != widget.project?.id).toList()
+        : <Project>[];
+    final entries = [
+      for (final p in others)
+        (title: p.title, slug: p.slug, featured: p.featured, sortOrder: p.sortOrder),
+      (
+        title: title,
+        slug: own,
+        featured: _featured,
+        sortOrder: widget.project?.sortOrder ?? others.length,
+      ),
+    ];
+    final unique = ProjectSlug.unique(entries).last;
+    return (slug: unique, generated: own == null, deduped: unique != base);
+  }
+
   // ── Save ───────────────────────────────────────────────────────────────────
 
   void _save() {
     if (_isSaving) return;
-    if (!_formKey.currentState!.validate()) {
+    final form = _formKey.currentState;
+    if (form != null && !form.validate()) return;
+    // Required fields live on the Basic tab; check them even when another
+    // tab is open (only the visible tab's fields are in the Form).
+    if (_titleController.text.trim().isEmpty ||
+        _descController.text.trim().isEmpty ||
+        _techController.text.trim().isEmpty ||
+        _downloadsController.text.trim().isEmpty) {
       setState(() => _activeTab = _Tab.basic);
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _formKey.currentState?.validate());
       return;
     }
+
+    final state = context.read<ProjectsCubit>().state;
+    final count = state is ProjectsLoaded ? state.projects.length : 0;
+
     final entity = Project(
       id: widget.project?.id ?? '',
       title: _titleController.text.trim(),
@@ -154,23 +218,22 @@ class _ProjectFormViewState extends State<ProjectFormView>
           .toList(),
       color: _parseHex(_colorController.text) ?? AppColors.primary,
       downloads: _downloadsController.text.trim(),
-      imageUrl: _imageUrlController.text.trim().isEmpty
-          ? null
-          : _imageUrlController.text.trim(),
-      logoUrl: _logoUrlController.text.trim().isEmpty
-          ? null
-          : _logoUrlController.text.trim(),
-      androidStoreUrl: _androidUrlController.text.trim().isEmpty
-          ? null
-          : _androidUrlController.text.trim(),
-      iosStoreUrl: _iosUrlController.text.trim().isEmpty
-          ? null
-          : _iosUrlController.text.trim(),
-      videoUrl: _videoUrlController.text.trim().isEmpty
-          ? null
-          : _videoUrlController.text.trim(),
+      imageUrl: _nonBlank(_imageUrlController),
+      logoUrl: _nonBlank(_logoUrlController),
+      androidStoreUrl: _nonBlank(_androidUrlController),
+      iosStoreUrl: _nonBlank(_iosUrlController),
+      videoUrl: _nonBlank(_videoUrlController),
       galleryImages:
           _galleryNotifier.value.isEmpty ? null : _galleryNotifier.value,
+      // Keep the dragged position; a new project goes to the end.
+      sortOrder: widget.project?.sortOrder ?? count,
+      featured: _featured,
+      highlight: _nonBlank(_highlightController),
+      problem: _nonBlank(_problemController),
+      role: _nonBlank(_roleController),
+      outcome: _nonBlank(_outcomeController),
+      // Stored the way the site cleans it, so the URL shown here is exact.
+      slug: ProjectSlug.clean(_slugController.text),
     );
 
     setState(() => _isSaving = true);
@@ -186,8 +249,8 @@ class _ProjectFormViewState extends State<ProjectFormView>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final dialogWidth = (size.width * 0.90).clamp(440.0, 1060.0);
-    final isWide = size.width > 820;
+    final dialogWidth = (size.width * 0.90).clamp(440.0, 1080.0);
+    final isWide = size.width > 860;
 
     return BlocConsumer<ProjectsCubit, ProjectsState>(
       listener: (context, state) {
@@ -197,74 +260,40 @@ class _ProjectFormViewState extends State<ProjectFormView>
           final isNew = widget.project == null;
           Navigator.of(context).pop();
           messenger?.showSnackBar(
-              _successSnackBar(isNew ? 'Project created!' : 'Project updated!'));
+              _snackBar(isNew ? 'Project created' : 'Project saved'));
         } else if (state is ProjectsError) {
           setState(() => _isSaving = false);
           ScaffoldMessenger.maybeOf(context)
-              ?.showSnackBar(_errorSnackBar(state.message));
+              ?.showSnackBar(_snackBar(state.message, error: true));
         }
       },
       builder: (context, state) {
         return Container(
           width: dialogWidth,
-          constraints: BoxConstraints(maxHeight: size.height * 0.9),
+          constraints: BoxConstraints(maxHeight: size.height * 0.92),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            // Gradient border
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                _previewColor.withValues(alpha: 0.35),
-                Colors.white.withValues(alpha: 0.08),
-                Colors.transparent,
-              ],
-              stops: const [0.0, 0.45, 1.0],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.65),
-                blurRadius: 80,
-                spreadRadius: 4,
-              ),
-              BoxShadow(
-                color: _previewColor.withValues(alpha: 0.12),
-                blurRadius: 100,
-                spreadRadius: 10,
-              ),
-            ],
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.border),
+            boxShadow: AppShadows.raised,
           ),
-          padding: const EdgeInsets.all(1),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(23),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                gradient: RadialGradient(
-                  center: const Alignment(-0.7, -0.8),
-                  radius: 0.75,
-                  colors: [
-                    _previewColor.withValues(alpha: 0.06),
-                    AppColors.surface,
-                  ],
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildHeader(),
-                  _buildTabBar(),
-                  Flexible(
-                    child: Form(
-                      key: _formKey,
-                      child: isWide
-                          ? _buildWideLayout()
-                          : _buildNarrowLayout(),
-                    ),
+            borderRadius: BorderRadius.circular(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHeader(),
+                _buildTabBar(),
+                const Divider(height: 1),
+                Flexible(
+                  child: Form(
+                    key: _formKey,
+                    child: isWide ? _buildWideLayout() : _buildNarrowLayout(),
                   ),
-                  _buildFooter(),
-                ],
-              ),
+                ),
+                const Divider(height: 1),
+                _buildFooter(),
+              ],
             ),
           ),
         );
@@ -275,65 +304,45 @@ class _ProjectFormViewState extends State<ProjectFormView>
   // ── Header ─────────────────────────────────────────────────────────────────
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 20, 20, 16),
-      decoration: BoxDecoration(
-        border: Border(
-            bottom: BorderSide(color: Colors.white.withValues(alpha: 0.07))),
-      ),
+    final isNew = widget.project == null;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 22, 20, 14),
       child: Row(
         children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            padding: const EdgeInsets.all(9),
-            decoration: BoxDecoration(
-              color: _previewColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _previewColor.withValues(alpha: 0.35)),
-              boxShadow: [
-                BoxShadow(
-                    color: _previewColor.withValues(alpha: 0.25),
-                    blurRadius: 12)
-              ],
-            ),
-            child: Icon(
-              widget.project == null
-                  ? Icons.add_circle_outline_rounded
-                  : Icons.edit_note_rounded,
-              color: _previewColor,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 14),
+          ColorDot(color: _previewColor, size: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.project == null
-                      ? 'Create New Project'
-                      : 'Edit Project',
+                  isNew ? 'New project' : 'Edit project',
                   style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    letterSpacing: 0.1,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.ink,
+                    letterSpacing: -0.4,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
-                  widget.project == null
-                      ? 'Fill in the details to add a portfolio project'
-                      : 'Editing "${widget.project!.title}"',
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.38)),
+                  isNew
+                      ? 'Add a project to the portfolio site.'
+                      : widget.project!.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 13.5, color: AppColors.textSecondary),
                 ),
               ],
             ),
           ),
-          _CloseButton(
-              enabled: !_isSaving,
-              onTap: () => Navigator.of(context).pop()),
+          IconActionButton(
+            icon: Icons.close_rounded,
+            tooltip: 'Close',
+            size: 36,
+            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+          ),
         ],
       ),
     );
@@ -342,39 +351,35 @@ class _ProjectFormViewState extends State<ProjectFormView>
   // ── Tab bar ────────────────────────────────────────────────────────────────
 
   Widget _buildTabBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.02),
-        border: Border(
-            bottom: BorderSide(color: Colors.white.withValues(alpha: 0.06))),
-      ),
-      child: Row(
-        children: [
-          _Tab1(
-            label: 'Basic Info',
-            icon: Icons.info_outline_rounded,
-            active: _activeTab == _Tab.basic,
-            color: _previewColor,
-            onTap: () => setState(() => _activeTab = _Tab.basic),
+    const tabs = [
+      (_Tab.basic, 'Basics', Icons.info_outline_rounded),
+      (_Tab.caseStudy, 'Case study', Icons.article_outlined),
+      (_Tab.media, 'Media', Icons.perm_media_outlined),
+      (_Tab.links, 'Store links', Icons.storefront_outlined),
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 14),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceLight,
+            borderRadius: BorderRadius.circular(999),
           ),
-          const SizedBox(width: 6),
-          _Tab1(
-            label: 'Media',
-            icon: Icons.perm_media_outlined,
-            active: _activeTab == _Tab.media,
-            color: _previewColor,
-            onTap: () => setState(() => _activeTab = _Tab.media),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final (tab, label, icon) in tabs)
+                _TabPill(
+                  label: label,
+                  icon: icon,
+                  active: _activeTab == tab,
+                  onTap: () => setState(() => _activeTab = tab),
+                ),
+            ],
           ),
-          const SizedBox(width: 6),
-          _Tab1(
-            label: 'Store Links',
-            icon: Icons.store_rounded,
-            active: _activeTab == _Tab.links,
-            color: _previewColor,
-            onTap: () => setState(() => _activeTab = _Tab.links),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -386,18 +391,19 @@ class _ProjectFormViewState extends State<ProjectFormView>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          flex: 3,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
             child: _buildActiveTab(),
           ),
         ),
-        VerticalDivider(
-            color: Colors.white.withValues(alpha: 0.06), width: 1),
-        SizedBox(
-          width: 240,
+        Container(
+          width: 300,
+          decoration: const BoxDecoration(
+            color: AppColors.background,
+            border: Border(left: BorderSide(color: AppColors.border)),
+          ),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(22),
             child: _buildPreviewCard(),
           ),
         ),
@@ -416,9 +422,11 @@ class _ProjectFormViewState extends State<ProjectFormView>
 
   Widget _buildActiveTab() {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
+      duration: AppMotion.of(context, AppMotion.medium),
+      switchInCurve: AppMotion.ease,
       child: switch (_activeTab) {
         _Tab.basic => _buildBasicTab(),
+        _Tab.caseStudy => _buildCaseStudyTab(),
         _Tab.media => _buildMediaTab(),
         _Tab.links => _buildLinksTab(),
       },
@@ -430,27 +438,69 @@ class _ProjectFormViewState extends State<ProjectFormView>
       key: const ValueKey('basic'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _field('Project Title', _titleController, required: true),
-        const SizedBox(height: 14),
-        _field('Description', _descController,
-            required: true, maxLines: 4),
-        const SizedBox(height: 14),
+        _field('Project title', _titleController, required: true),
+        const SizedBox(height: 16),
+        _field('Description', _descController, required: true, maxLines: 4),
+        const SizedBox(height: 16),
         _field('Technologies', _techController,
-            required: true,
-            hint: 'Flutter, Firebase, Dart  (comma separated)'),
-        const SizedBox(height: 14),
+            required: true, hint: 'Flutter, Firebase, Dart (comma separated)'),
+        const SizedBox(height: 16),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: _field('Downloads / Stats', _downloadsController,
-                  required: true, hint: '10K+ Downloads'),
+              child: _field('Downloads / status', _downloadsController,
+                  required: true, hint: '10,000+'),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 16),
             Expanded(child: _colorField()),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         PresetColorRow(selected: _previewColor, onSelected: _pickPreset),
+        const SizedBox(height: 28),
+        const _SectionLabel(
+          title: 'On the site',
+          subtitle: 'How this project is presented in the projects list.',
+        ),
+        const SizedBox(height: 14),
+        _FeaturedSwitch(
+          value: _featured,
+          onChanged: (v) => setState(() => _featured = v),
+        ),
+        const SizedBox(height: 16),
+        _field(
+          'Highlight',
+          _highlightController,
+          hint: 'Example: Rated 4.8 by 1,000+ store reviewers',
+          helper: _highlightHelp,
+          maxLength: 120,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCaseStudyTab() {
+    return Column(
+      key: const ValueKey('caseStudy'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionLabel(
+          title: 'Case study page',
+          subtitle:
+              'The project\'s own page on the site. Each part below is shown '
+              'only when it has text.',
+        ),
+        const SizedBox(height: 16),
+        _slugField(),
+        const SizedBox(height: 20),
+        _field('The problem', _problemController,
+            maxLines: 4, helper: _storyHelp),
+        const SizedBox(height: 16),
+        _field('My role', _roleController, maxLines: 4, helper: _storyHelp),
+        const SizedBox(height: 16),
+        _field('The outcome', _outcomeController,
+            maxLines: 4, helper: _storyHelp),
       ],
     );
   }
@@ -461,24 +511,24 @@ class _ProjectFormViewState extends State<ProjectFormView>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ImageUploadField(
-          label: 'Cover Image',
+          label: 'Cover image',
           controller: _imageUrlController,
           storagePath: 'projects/covers',
         ),
         const SizedBox(height: 20),
         ImageUploadField(
-          label: 'Logo / Icon',
+          label: 'Logo / icon',
           controller: _logoUrlController,
           storagePath: 'projects/logos',
         ),
         const SizedBox(height: 20),
         MultipleImageUploadField(
-          label: 'Gallery Screenshots',
+          label: 'Gallery screenshots',
           imagesNotifier: _galleryNotifier,
           storagePath: 'projects/gallery',
         ),
         const SizedBox(height: 20),
-        _field('Video Demo URL', _videoUrlController,
+        _field('Video demo URL', _videoUrlController,
             hint: 'https://youtube.com/watch?v=...'),
       ],
     );
@@ -490,21 +540,109 @@ class _ProjectFormViewState extends State<ProjectFormView>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _labeledField(
-          'Android Play Store URL',
+          'Google Play URL',
           _androidUrlController,
           icon: Icons.android_rounded,
-          color: const Color(0xFF4ADE80),
           hint: 'https://play.google.com/...',
         ),
         const SizedBox(height: 16),
         _labeledField(
-          'iOS App Store URL',
+          'App Store URL',
           _iosUrlController,
           icon: Icons.apple_rounded,
-          color: Colors.white54,
           hint: 'https://apps.apple.com/...',
         ),
       ],
+    );
+  }
+
+  // ── Slug field with live URL ───────────────────────────────────────────────
+
+  Widget _slugField() {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_slugController, _titleController]),
+      builder: (context, _) {
+        final r = _resolvedSlug();
+        final url = ProjectSlug.urlFor(r.slug);
+        final note = r.deduped
+            ? 'Another project already uses this name, so the site adds a number.'
+            : r.generated
+                ? 'Empty: the site makes this from the title.'
+                : null;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              controller: _slugController,
+              style: AppFonts.monoStyle(fontSize: 14, color: AppColors.ink),
+              inputFormatters: [LengthLimitingTextInputFormatter(80)],
+              decoration: InputDecoration(
+                labelText: 'URL name (slug)',
+                hintText: ProjectSlug.fromTitle(_titleController.text),
+                hintStyle: AppFonts.monoStyle(
+                    fontSize: 14, color: AppColors.textTertiary),
+                helperText: 'Lowercase letters, digits and dashes. '
+                    'Leave empty to use the title.',
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.link_rounded,
+                      size: 16, color: AppColors.textTertiary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SelectableText(
+                          url,
+                          style: AppFonts.monoStyle(
+                              fontSize: 12.5, color: AppColors.ink),
+                        ),
+                        if (note != null) ...[
+                          const SizedBox(height: 3),
+                          Text(note,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textTertiary)),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconActionButton(
+                    icon: Icons.copy_rounded,
+                    tooltip: 'Copy URL',
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: url));
+                      ScaffoldMessenger.maybeOf(context)
+                          ?.showSnackBar(_snackBar('URL copied'));
+                    },
+                  ),
+                  if (widget.project != null) ...[
+                    const SizedBox(width: 6),
+                    IconActionButton(
+                      icon: Icons.arrow_outward_rounded,
+                      tooltip: 'Open case study in a new tab',
+                      onPressed: () => launchUrl(Uri.parse(url),
+                          webOnlyWindowName: '_blank'),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -514,252 +652,136 @@ class _ProjectFormViewState extends State<ProjectFormView>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 3,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: _previewColor,
-                  borderRadius: BorderRadius.circular(4),
-                  boxShadow: [
-                    BoxShadow(
-                        color: _previewColor.withValues(alpha: 0.6),
-                        blurRadius: 6)
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Live Preview',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white.withValues(alpha: 0.5),
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ],
+        const Text(
+          'Preview',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
           ),
         ),
-        ValueListenableBuilder<List<String>>(
-          valueListenable: _galleryNotifier,
-          builder: (context, gallery, _) {
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+        const SizedBox(height: 12),
+        AnimatedBuilder(
+          animation: Listenable.merge([
+            _titleController,
+            _descController,
+            _techController,
+            _highlightController,
+            _downloadsController,
+            _imageUrlController,
+          ]),
+          builder: (context, _) {
+            final title = _titleController.text.trim();
+            final highlight = _highlightController.text.trim();
+            final desc = _descController.text.trim();
+            final tags = _techController.text
+                .split(',')
+                .map((t) => t.trim())
+                .where((t) => t.isNotEmpty)
+                .toList();
+            final isLive = _androidUrlController.text.isNotEmpty ||
+                _iosUrlController.text.isNotEmpty;
+            return Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    _previewColor.withValues(alpha: 0.15),
-                    Colors.white.withValues(alpha: 0.01),
-                    AppColors.surface,
-                  ],
-                  stops: const [0.0, 0.4, 1.0],
-                ),
-                border: Border.all(
-                    color: _previewColor.withValues(alpha: 0.25)),
-                boxShadow: [
-                  BoxShadow(
-                    color: _previewColor.withValues(alpha: 0.1),
-                    blurRadius: 20,
-                    spreadRadius: -4,
-                  ),
-                ],
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+                boxShadow: AppShadows.card,
               ),
+              clipBehavior: Clip.antiAlias,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Cover area
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(17)),
-                    child: AspectRatio(
-                      aspectRatio: 16 / 9,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          _imageUrlController.text.isNotEmpty
-                              ? Image.network(
-                                  _imageUrlController.text,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (c, e, s) =>
-                                      _placeholderCover(),
-                                )
-                              : _placeholderCover(),
-                          Positioned.fill(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  stops: const [0.4, 1.0],
-                                  colors: [
-                                    Colors.transparent,
-                                    AppColors.surface
-                                        .withValues(alpha: 0.95),
-                                  ],
-                                ),
-                              ),
-                            ),
+                  AnimatedContainer(
+                    duration: AppMotion.of(context, AppMotion.slow),
+                    height: 3,
+                    color: _previewColor,
+                  ),
+                  AspectRatio(
+                    aspectRatio: 16 / 10,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        _imageUrlController.text.isNotEmpty
+                            ? Image.network(
+                                _imageUrlController.text,
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, e, s) => _placeholderCover(),
+                              )
+                            : _placeholderCover(),
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: Wrap(spacing: 6, children: [
+                            if (_featured) const FeaturedBadge(),
+                            if (isLive) const LiveBadge(),
+                          ]),
+                        ),
+                        if (_downloadsController.text.isNotEmpty)
+                          Positioned(
+                            bottom: 8,
+                            left: 8,
+                            child: DownloadsBadge(
+                                label: _downloadsController.text),
                           ),
-                          // Downloads badge
-                          if (_downloadsController.text.isNotEmpty)
-                            Positioned(
-                              top: 8,
-                              left: 8,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 7, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.black
-                                      .withValues(alpha: 0.55),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                      color: AppColors.primary
-                                          .withValues(alpha: 0.3)),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.download_rounded,
-                                        size: 9,
-                                        color: AppColors.primary),
-                                    const SizedBox(width: 3),
-                                    Text(
-                                      _downloadsController.text,
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          // Live badge
-                          if (_androidUrlController.text.isNotEmpty ||
-                              _iosUrlController.text.isNotEmpty)
-                            const Positioned(
-                              top: 8,
-                              right: 8,
-                              child: _SmallLiveBadge(),
-                            ),
-                        ],
-                      ),
+                      ],
                     ),
                   ),
-                  // Info
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              width: 7,
-                              height: 7,
-                              margin: const EdgeInsets.only(right: 7),
-                              decoration: BoxDecoration(
-                                color: _previewColor,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: _previewColor
-                                        .withValues(alpha: 0.7),
-                                    blurRadius: 6,
-                                  )
-                                ],
-                              ),
-                            ),
+                            ColorDot(color: _previewColor),
+                            const SizedBox(width: 8),
                             Expanded(
-                              child: ValueListenableBuilder(
-                                valueListenable: _titleController,
-                                builder: (context, value, _) => Text(
-                                  _titleController.text.isEmpty
-                                      ? 'Project Title'
-                                      : _titleController.text,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: _titleController.text.isEmpty
-                                        ? Colors.white24
-                                        : Colors.white,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                              child: Text(
+                                title.isEmpty ? 'Project title' : title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: -0.2,
+                                  color: title.isEmpty
+                                      ? AppColors.textTertiary
+                                      : AppColors.ink,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 5),
-                        ValueListenableBuilder(
-                          valueListenable: _descController,
-                          builder: (context, value, _) => Text(
-                            _descController.text.isEmpty
-                                ? 'Description will appear here…'
-                                : _descController.text,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: _descController.text.isEmpty
-                                  ? Colors.white12
-                                  : Colors.white.withValues(alpha: 0.38),
-                              height: 1.4,
-                            ),
+                        if (highlight.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            highlight,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.ink,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 6),
+                        Text(
+                          desc.isEmpty ? 'Description appears here.' : desc,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            height: 1.45,
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        ValueListenableBuilder(
-                          valueListenable: _techController,
-                          builder: (context, value, _) {
-                            final tags = _techController.text
-                                .split(',')
-                                .map((t) => t.trim())
-                                .where((t) => t.isNotEmpty)
-                                .take(3)
-                                .toList();
-                            if (tags.isEmpty) return const SizedBox.shrink();
-                            return Wrap(
-                              spacing: 4,
-                              runSpacing: 4,
-                              children: tags
-                                  .map((t) => Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: _previewColor
-                                              .withValues(alpha: 0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                          border: Border.all(
-                                              color: _previewColor
-                                                  .withValues(alpha: 0.2)),
-                                        ),
-                                        child: Text(
-                                          t,
-                                          style: TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.w600,
-                                            color: _previewColor
-                                                .withValues(alpha: 0.9),
-                                            fontFamily: 'monospace',
-                                          ),
-                                        ),
-                                      ))
-                                  .toList(),
-                            );
-                          },
-                        ),
+                        if (tags.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          TechChips(tech: tags, max: 3),
+                        ],
                       ],
                     ),
                   ),
@@ -773,20 +795,18 @@ class _ProjectFormViewState extends State<ProjectFormView>
   }
 
   Widget _placeholderCover() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            _previewColor.withValues(alpha: 0.15),
-            _previewColor.withValues(alpha: 0.04),
-          ],
-        ),
-      ),
+    return ColoredBox(
+      color: AppColors.background,
       child: Center(
-        child: Icon(Icons.rocket_launch_rounded,
-            size: 28, color: _previewColor.withValues(alpha: 0.3)),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: _previewColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(Icons.image_outlined, size: 20, color: _previewColor),
+        ),
       ),
     );
   }
@@ -794,51 +814,29 @@ class _ProjectFormViewState extends State<ProjectFormView>
   // ── Footer ─────────────────────────────────────────────────────────────────
 
   Widget _buildFooter() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
-      decoration: BoxDecoration(
-        border: Border(
-            top: BorderSide(color: Colors.white.withValues(alpha: 0.07))),
-      ),
+    final isEdit = widget.project != null;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 14, 24, 16),
       child: Row(
         children: [
-          // Tab progress dots
-          Row(
-            children: _Tab.values.map((t) {
-              final active = t == _activeTab;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: active ? 18 : 6,
-                height: 6,
-                margin: const EdgeInsets.only(right: 5),
-                decoration: BoxDecoration(
-                  color: active
-                      ? _previewColor
-                      : Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              );
-            }).toList(),
-          ),
-          const Spacer(),
-          TextButton(
-            onPressed:
-                _isSaving ? null : () => Navigator.of(context).pop(),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+          Expanded(
+            child: Text(
+              'Fields marked * are required.',
+              style: TextStyle(
+                  fontSize: 12.5,
+                  color: AppColors.textTertiary.withValues(alpha: 0.62 / 0.62)),
             ),
-            child: Text('Cancel',
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.45),
-                    fontSize: 14)),
           ),
-          const SizedBox(width: 10),
-          _SaveButton(
-            isSaving: _isSaving,
-            isEdit: widget.project != null,
-            color: _previewColor,
+          AppButton(
+            label: 'Cancel',
+            variant: AppButtonVariant.ghost,
+            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+          ),
+          const SizedBox(width: 8),
+          AppButton(
+            label: isEdit ? 'Save changes' : 'Create project',
+            icon: isEdit ? Icons.check_rounded : Icons.add_rounded,
+            isLoading: _isSaving,
             onPressed: _save,
           ),
         ],
@@ -854,14 +852,20 @@ class _ProjectFormViewState extends State<ProjectFormView>
     bool required = false,
     int maxLines = 1,
     String? hint,
+    String? helper,
+    int? maxLength,
   }) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
-      style: const TextStyle(color: Colors.white, fontSize: 14),
-      decoration: _inputDecoration(
-        label: required ? '$label *' : label,
-        hint: hint,
+      minLines: maxLines > 1 ? 3 : 1,
+      maxLength: maxLength,
+      style: const TextStyle(color: AppColors.ink, fontSize: 14.5, height: 1.45),
+      decoration: InputDecoration(
+        labelText: required ? '$label *' : label,
+        hintText: hint,
+        helperText: helper,
+        alignLabelWithHint: maxLines > 1,
       ),
       validator: required
           ? (v) => v == null || v.trim().isEmpty ? 'Required' : null
@@ -874,23 +878,16 @@ class _ProjectFormViewState extends State<ProjectFormView>
     String label,
     TextEditingController controller, {
     required IconData icon,
-    required Color color,
     String? hint,
   }) {
     return TextFormField(
       controller: controller,
-      style: const TextStyle(color: Colors.white, fontSize: 14),
-      decoration: _inputDecoration(label: label, hint: hint).copyWith(
-        prefixIcon: Container(
-          margin: const EdgeInsets.all(10),
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: color.withValues(alpha: 0.2)),
-          ),
-          child: Icon(icon, size: 15, color: color),
-        ),
+      style: const TextStyle(color: AppColors.ink, fontSize: 14.5),
+      onChanged: (_) => setState(() {}),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixIcon: Icon(icon, size: 18, color: AppColors.textSecondary),
       ),
     );
   }
@@ -899,202 +896,208 @@ class _ProjectFormViewState extends State<ProjectFormView>
     return TextFormField(
       controller: _colorController,
       maxLength: 6,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 14,
-        fontFamily: 'monospace',
-        letterSpacing: 1.2,
-      ),
+      style: AppFonts.monoStyle(fontSize: 14, color: AppColors.ink),
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'[0-9a-fA-F]')),
       ],
       onChanged: _onColorChanged,
-      decoration: _inputDecoration(label: 'Theme Color').copyWith(
+      decoration: InputDecoration(
+        labelText: 'Project colour',
         counterText: '',
         prefixText: '# ',
-        prefixStyle: TextStyle(
-          color: _previewColor,
-          fontWeight: FontWeight.w700,
-          fontFamily: 'monospace',
-        ),
+        prefixStyle: AppFonts.monoStyle(
+            fontSize: 14, color: AppColors.textTertiary),
         suffixIcon: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(12),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            width: 26,
-            height: 26,
+            duration: AppMotion.of(context, AppMotion.slow),
+            width: 22,
+            height: 22,
             decoration: BoxDecoration(
               color: _previewColor,
-              borderRadius: BorderRadius.circular(7),
-              border:
-                  Border.all(color: Colors.white.withValues(alpha: 0.2)),
-              boxShadow: [
-                BoxShadow(
-                    color: _previewColor.withValues(alpha: 0.55),
-                    blurRadius: 8)
-              ],
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppColors.border),
             ),
           ),
         ),
       ),
       validator: (v) {
         if (v == null || v.trim().isEmpty) return null;
-        if (_parseHex(v) == null) return 'Must be 6 hex chars (e.g. 00D9FF)';
+        if (_parseHex(v) == null) return 'Use 6 hex characters, e.g. 155E75';
         return null;
       },
     );
   }
 
-  InputDecoration _inputDecoration({required String label, String? hint}) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: TextStyle(
-          color: Colors.white.withValues(alpha: 0.45), fontSize: 13),
-      hintText: hint,
-      hintStyle: TextStyle(
-          color: Colors.white.withValues(alpha: 0.2), fontSize: 12),
-      filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.03),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide:
-            BorderSide(color: Colors.white.withValues(alpha: 0.09)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _previewColor, width: 1.5),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.redAccent),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide:
-            const BorderSide(color: Colors.redAccent, width: 1.5),
-      ),
-    );
-  }
-
   // ── Snackbars ──────────────────────────────────────────────────────────────
 
-  static SnackBar _successSnackBar(String message) => SnackBar(
+  static SnackBar _snackBar(String message, {bool error = false}) => SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Color(0xFF4ADE80), size: 18),
+            Icon(
+              error ? Icons.error_outline_rounded : Icons.check_circle_rounded,
+              color: error ? const Color(0xFFFDA29B) : const Color(0xFF75E0A7),
+              size: 18,
+            ),
             const SizedBox(width: 10),
-            Text(message, style: const TextStyle(color: Colors.white)),
+            Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: const Color(0xFF1A1A2E),
-        behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(24),
-        duration: const Duration(seconds: 3),
-      );
-
-  static SnackBar _errorSnackBar(String message) => SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline_rounded,
-                color: Colors.redAccent, size: 18),
-            const SizedBox(width: 10),
-            Expanded(
-                child: Text(message,
-                    style: const TextStyle(color: Colors.white))),
-          ],
-        ),
-        backgroundColor: const Color(0xFF1A1A2E),
-        behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(24),
-        duration: const Duration(seconds: 4),
+        duration: Duration(seconds: error ? 4 : 3),
       );
 }
 
-// ── Tab button ─────────────────────────────────────────────────────────────────
+// ── Section label ────────────────────────────────────────────────────────────
 
-class _Tab1 extends StatefulWidget {
+class _SectionLabel extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  const _SectionLabel({required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppColors.ink,
+              letterSpacing: -0.2,
+            )),
+        const SizedBox(height: 2),
+        Text(subtitle,
+            style: const TextStyle(
+                fontSize: 13, color: AppColors.textSecondary, height: 1.4)),
+      ],
+    );
+  }
+}
+
+// ── Featured switch ─────────────────────────────────────────────────────────
+
+class _FeaturedSwitch extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  const _FeaturedSwitch({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: () => onChanged(!value),
+      pressedScale: 0.99,
+      builder: (context, hovered) => AnimatedContainer(
+        duration: AppMotion.of(context, AppMotion.fast),
+        curve: AppMotion.ease,
+        padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+        decoration: BoxDecoration(
+          color: value
+              ? AppColors.primarySoft
+              : hovered
+                  ? AppColors.background
+                  : AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: value
+                ? AppColors.primary.withValues(alpha: 0.35)
+                : AppColors.borderStrong,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              value ? Icons.star_rounded : Icons.star_outline_rounded,
+              size: 20,
+              color: value ? AppColors.primary : AppColors.textTertiary,
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Featured project',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Listed first on the site, with a "Featured project" badge.',
+                    style: TextStyle(
+                        fontSize: 12.5, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            Switch(value: value, onChanged: onChanged),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Tab pill ───────────────────────────────────────────────────────────────
+
+class _TabPill extends StatelessWidget {
   final String label;
   final IconData icon;
   final bool active;
-  final Color color;
   final VoidCallback onTap;
 
-  const _Tab1({
+  const _TabPill({
     required this.label,
     required this.icon,
     required this.active,
-    required this.color,
     required this.onTap,
   });
 
   @override
-  State<_Tab1> createState() => _Tab1State();
-}
-
-class _Tab1State extends State<_Tab1> {
-  bool _hovered = false;
-
-  @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: widget.active
-                ? widget.color.withValues(alpha: 0.14)
-                : _hovered
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: widget.active
-                  ? widget.color.withValues(alpha: 0.35)
-                  : Colors.transparent,
+    return Pressable(
+      onTap: onTap,
+      semanticLabel: label,
+      builder: (context, hovered) => AnimatedContainer(
+        duration: AppMotion.of(context, AppMotion.medium),
+        curve: AppMotion.ease,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? AppColors.surface : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: active
+              ? const [
+                  BoxShadow(
+                      color: Color(0x1A16171A),
+                      blurRadius: 2,
+                      offset: Offset(0, 1)),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 15,
+                color: active || hovered
+                    ? AppColors.ink
+                    : AppColors.textTertiary),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+                color: active || hovered
+                    ? AppColors.ink
+                    : AppColors.textSecondary,
+              ),
             ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                widget.icon,
-                size: 14,
-                color: widget.active
-                    ? widget.color
-                    : Colors.white.withValues(alpha: 0.35),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                widget.label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: widget.active
-                      ? FontWeight.w600
-                      : FontWeight.w400,
-                  color: widget.active
-                      ? widget.color
-                      : Colors.white.withValues(alpha: 0.4),
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -1117,200 +1120,33 @@ class PresetColorRow extends StatelessWidget {
       runSpacing: 8,
       children: _kPresetColors.map((c) {
         final isActive = c.toARGB32() == selected.toARGB32();
-        return GestureDetector(
+        return Pressable(
           onTap: () => onSelected(c),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
+          pressedScale: 0.92,
+          semanticLabel: 'Use colour',
+          builder: (context, hovered) => AnimatedContainer(
+            duration: AppMotion.of(context, AppMotion.fast),
+            curve: AppMotion.ease,
             width: 26,
             height: 26,
+            padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
-              color: c,
               shape: BoxShape.circle,
               border: Border.all(
-                color: isActive ? Colors.white : Colors.transparent,
-                width: 2.5,
+                color: isActive
+                    ? AppColors.ink
+                    : hovered
+                        ? AppColors.borderStrong
+                        : Colors.transparent,
+                width: 1.5,
               ),
-              boxShadow: isActive
-                  ? [BoxShadow(color: c.withValues(alpha: 0.7), blurRadius: 10)]
-                  : [],
+            ),
+            child: DecoratedBox(
+              decoration: BoxDecoration(color: c, shape: BoxShape.circle),
             ),
           ),
         );
       }).toList(),
-    );
-  }
-}
-
-// ── Close button ───────────────────────────────────────────────────────────────
-
-class _CloseButton extends StatefulWidget {
-  final bool enabled;
-  final VoidCallback onTap;
-  const _CloseButton({required this.enabled, required this.onTap});
-
-  @override
-  State<_CloseButton> createState() => _CloseButtonState();
-}
-
-class _CloseButtonState extends State<_CloseButton> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: widget.enabled
-          ? SystemMouseCursors.click
-          : SystemMouseCursors.forbidden,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.enabled ? widget.onTap : null,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.all(7),
-          decoration: BoxDecoration(
-            color: _hovered
-                ? Colors.redAccent.withValues(alpha: 0.15)
-                : Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(9),
-            border: Border.all(
-              color: _hovered
-                  ? Colors.redAccent.withValues(alpha: 0.4)
-                  : Colors.white.withValues(alpha: 0.09),
-            ),
-          ),
-          child: Icon(
-            Icons.close_rounded,
-            color: _hovered ? Colors.redAccent : Colors.white38,
-            size: 16,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Save button ────────────────────────────────────────────────────────────────
-
-class _SaveButton extends StatefulWidget {
-  final bool isSaving;
-  final bool isEdit;
-  final Color color;
-  final VoidCallback onPressed;
-
-  const _SaveButton({
-    required this.isSaving,
-    required this.isEdit,
-    required this.color,
-    required this.onPressed,
-  });
-
-  @override
-  State<_SaveButton> createState() => _SaveButtonState();
-}
-
-class _SaveButtonState extends State<_SaveButton> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: AnimatedScale(
-        scale: (!widget.isSaving && _hovered) ? 1.04 : 1.0,
-        duration: const Duration(milliseconds: 150),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: _hovered && !widget.isSaving
-                ? [
-                    BoxShadow(
-                      color: widget.color.withValues(alpha: 0.4),
-                      blurRadius: 18,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : [],
-          ),
-          child: ElevatedButton(
-            onPressed: widget.isSaving ? null : widget.onPressed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: widget.color,
-              foregroundColor: Colors.black,
-              disabledBackgroundColor:
-                  widget.color.withValues(alpha: 0.4),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 28, vertical: 14),
-              textStyle: const TextStyle(
-                  fontWeight: FontWeight.w700, fontSize: 14),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              elevation: 0,
-            ),
-            child: widget.isSaving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.black54),
-                  )
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                          widget.isEdit
-                              ? Icons.save_rounded
-                              : Icons.check_rounded,
-                          size: 17),
-                      const SizedBox(width: 7),
-                      Text(widget.isEdit
-                          ? 'Save Changes'
-                          : 'Create Project'),
-                    ],
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Small live badge for preview card ─────────────────────────────────────────
-
-class _SmallLiveBadge extends StatelessWidget {
-  const _SmallLiveBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-            color: const Color(0xFF4ADE80).withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 5,
-            height: 5,
-            decoration: const BoxDecoration(
-              color: Color(0xFF4ADE80),
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 4),
-          const Text('Live',
-              style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF4ADE80))),
-        ],
-      ),
     );
   }
 }

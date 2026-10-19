@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:admin_dashboard/core/constants/app_colors.dart';
+import 'package:admin_dashboard/core/demo/demo_mode.dart';
+import 'package:admin_dashboard/core/widgets/app_button.dart';
 import 'package:admin_dashboard/core/widgets/fade_slide_in.dart';
 import '../bloc/auth_cubit.dart';
 import '../bloc/auth_state.dart';
@@ -43,6 +46,12 @@ class _LoginFormState extends State<LoginForm> {
     }
   }
 
+  static const _labelStyle = TextStyle(
+    color: AppColors.ink,
+    fontSize: 13.5,
+    fontWeight: FontWeight.w500,
+  );
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -53,36 +62,40 @@ class _LoginFormState extends State<LoginForm> {
           animation: _stagger(0.0, 0.5),
           child: const Text(
             'Welcome back',
-            textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
+              color: AppColors.ink,
+              fontSize: 28,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.7,
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         FadeSlideIn(
           animation: _stagger(0.05, 0.55),
           child: const Text(
-            'Sign in to manage your portfolio',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white54, fontSize: 14),
+            'Sign in to manage your portfolio.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
           ),
         ),
-        const SizedBox(height: 32),
+        if (demoMode) ...[
+          const SizedBox(height: 20),
+          const _DemoNotice(),
+        ],
+        const SizedBox(height: 28),
         FadeSlideIn(
           animation: _stagger(0.15, 0.65),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Email', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+              const Text('Email', style: _labelStyle),
               const SizedBox(height: 8),
               TextField(
                 controller: _emailController,
-                style: const TextStyle(color: Colors.white),
-                decoration: _inputDecoration(hint: 'you@example.com'),
+                style: const TextStyle(color: AppColors.ink, fontSize: 15),
+                decoration: const InputDecoration(hintText: 'you@example.com'),
                 keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
                 textInputAction: TextInputAction.next,
                 onSubmitted: (_) {
                   if (_passwordController.text.isEmpty) {
@@ -95,30 +108,36 @@ class _LoginFormState extends State<LoginForm> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
         FadeSlideIn(
           animation: _stagger(0.25, 0.75),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Password', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+              const Text('Password', style: _labelStyle),
               const SizedBox(height: 8),
               TextField(
                 controller: _passwordController,
                 focusNode: _passwordFocusNode,
-                style: const TextStyle(color: Colors.white),
-                decoration: _inputDecoration(hint: 'Password').copyWith(
+                style: const TextStyle(color: AppColors.ink, fontSize: 15),
+                decoration: InputDecoration(
+                  hintText: 'Password',
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      color: Colors.white54,
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: AppColors.textTertiary,
                       size: 20,
                     ),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                    tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                    tooltip:
+                        _obscurePassword ? 'Show password' : 'Hide password',
                   ),
                 ),
                 obscureText: _obscurePassword,
+                autofillHints: const [AutofillHints.password],
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => _onLoginPressed(),
               ),
@@ -134,7 +153,7 @@ class _LoginFormState extends State<LoginForm> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(state.message),
-                    backgroundColor: Colors.red,
+                    backgroundColor: AppColors.danger,
                   ),
                 );
               }
@@ -142,7 +161,7 @@ class _LoginFormState extends State<LoginForm> {
             builder: (context, state) {
               final isLoading = state is AuthLoading;
               return HoverGlowButton(
-                label: 'SIGN IN',
+                label: 'Sign in',
                 isLoading: isLoading,
                 onPressed: isLoading ? null : _onLoginPressed,
               );
@@ -152,17 +171,39 @@ class _LoginFormState extends State<LoginForm> {
       ],
     );
   }
+}
 
-  InputDecoration _inputDecoration({required String hint}) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: Colors.white30, fontSize: 14),
-      filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.03),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white12)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white12)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary)),
+/// Shown only in demo builds: sign-in is off, so offer a way in.
+class _DemoNotice extends StatelessWidget {
+  const _DemoNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8EB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          const Expanded(
+            child: Text(
+              'Demo build: sign-in is off and all data is sample data.',
+              style: TextStyle(
+                  color: AppColors.ink, fontSize: 13, height: 1.4),
+            ),
+          ),
+          const SizedBox(width: 10),
+          AppButton(
+            label: 'Open',
+            compact: true,
+            variant: AppButtonVariant.secondary,
+            onPressed: () => context.go('/'),
+          ),
+        ],
+      ),
     );
   }
 }

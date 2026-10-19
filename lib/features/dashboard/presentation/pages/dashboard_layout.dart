@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:admin_dashboard/core/constants/app_colors.dart';
 import 'package:admin_dashboard/core/constants/app_links.dart';
+import 'package:admin_dashboard/core/demo/demo_mode.dart';
+import 'package:admin_dashboard/core/widgets/pressable.dart';
 
 class DashboardLayout extends StatelessWidget {
   final Widget child;
@@ -21,21 +23,7 @@ class DashboardLayout extends StatelessWidget {
       body: Row(
         children: [
           _Sidebar(location: location),
-          Container(
-            width: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.primary.withValues(alpha: 0.12),
-                  Colors.white.withValues(alpha: 0.04),
-                  Colors.transparent,
-                ],
-                stops: const [0.0, 0.3, 1.0],
-              ),
-            ),
-          ),
+          const VerticalDivider(width: 1, thickness: 1, color: AppColors.border),
           Expanded(child: child),
         ],
       ),
@@ -52,34 +40,22 @@ class _Sidebar extends StatelessWidget {
   static const _navItems = [
     _NavItem(icon: Icons.grid_view_rounded,       label: 'Dashboard',     route: '/'),
     _NavItem(icon: Icons.person_outline_rounded,  label: 'Profile Info',  route: '/profile-info'),
-    _NavItem(icon: Icons.rocket_launch_rounded,   label: 'Projects',      route: '/projects'),
-    _NavItem(icon: Icons.auto_awesome_rounded,    label: 'Expertise',     route: '/expertise'),
+    _NavItem(icon: Icons.rocket_launch_outlined,  label: 'Projects',      route: '/projects'),
+    _NavItem(icon: Icons.auto_awesome_outlined,   label: 'Expertise',     route: '/expertise'),
     _NavItem(icon: Icons.timeline_rounded,        label: 'Experience',    route: '/experience'),
-    _NavItem(icon: Icons.rate_review_rounded,     label: 'Testimonials',  route: '/testimonials'),
-    _NavItem(icon: Icons.emoji_events_rounded,    label: 'Why Choose Me', route: '/why-choose-me'),
+    _NavItem(icon: Icons.rate_review_outlined,    label: 'Testimonials',  route: '/testimonials'),
+    _NavItem(icon: Icons.emoji_events_outlined,   label: 'Why Choose Me', route: '/why-choose-me'),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 240,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        // Very subtle radial glow at the top from the cyan brand color
-        gradient: RadialGradient(
-          center: const Alignment(-0.6, -0.85),
-          radius: 0.9,
-          colors: [
-            AppColors.primary.withValues(alpha: 0.055),
-            AppColors.surface,
-          ],
-        ),
-      ),
+      color: AppColors.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildBrand(),
-          const SizedBox(height: 4),
           _buildNavSection(context),
           const Spacer(),
           _buildBottomSection(context),
@@ -89,64 +65,62 @@ class _Sidebar extends StatelessWidget {
   }
 
   Widget _buildBrand() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 26, 18, 20),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
       child: Row(
         children: [
-          // Logo mark
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.45),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              width: 36,
+              height: 36,
+              child: Image.asset('assets/images/logo.png'),
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Portfolio',
+                  style: TextStyle(
+                    color: AppColors.ink,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    letterSpacing: -0.2,
+                    height: 1.2,
+                  ),
                 ),
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.15),
-                  blurRadius: 32,
-                  spreadRadius: 2,
+                Text(
+                  'Admin',
+                  style: TextStyle(
+                    color: AppColors.textTertiary,
+                    fontSize: 12.5,
+                    height: 1.3,
+                  ),
                 ),
               ],
             ),
-            child: Image.asset('assets/images/logo.png'),
           ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Portfolio',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                  letterSpacing: 0.1,
-                  height: 1.1,
-                ),
-              ),
-              Text(
-                'ADMIN',
-                style: TextStyle(
-                  color: AppColors.primary.withValues(alpha: 0.6),
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 2.5,
-                ),
-              ),
-            ],
-          ),
+          if (demoMode) const _DemoBadge(),
         ],
       ),
     );
   }
+
+  Widget _sectionLabel(String text) => Padding(
+        padding: const EdgeInsets.only(left: 12, bottom: 6, top: 4),
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: AppColors.textTertiary,
+            fontSize: 11.5,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.2,
+          ),
+        ),
+      );
 
   Widget _buildNavSection(BuildContext context) {
     return Padding(
@@ -154,29 +128,7 @@ class _Sidebar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 10, bottom: 8),
-            child: Row(
-              children: [
-                Text(
-                  'NAVIGATION',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.8,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Divider(
-                    color: Colors.white.withValues(alpha: 0.06),
-                    height: 1,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          _sectionLabel('Content'),
           ..._navItems.map((item) {
             final isSelected = item.route == '/'
                 ? location == '/'
@@ -195,106 +147,45 @@ class _Sidebar extends StatelessWidget {
   Widget _buildBottomSection(BuildContext context) {
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
-        final email =
-            state is Authenticated ? (state.user.email ?? '') : '';
-        final initial =
-            email.isNotEmpty ? email[0].toUpperCase() : 'A';
+        final email = demoMode
+            ? 'Demo mode, no account'
+            : state is Authenticated
+                ? (state.user.email ?? '')
+                : '';
+        final initial = demoMode
+            ? 'D'
+            : email.isNotEmpty
+                ? email[0].toUpperCase()
+                : 'A';
 
-        return Column(
-          children: [
-            // Preview Portfolio button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-              child: _PreviewPortfolioButton(),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10, bottom: 8),
-                    child: Row(
-                      children: [
-                        Text(
-                          'ACCOUNT',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.18),
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.8,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Divider(
-                            color: Colors.white.withValues(alpha: 0.06),
-                            height: 1,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _SidebarItem(
-                    item: const _NavItem(
-                      icon: Icons.logout_rounded,
-                      label: 'Logout',
-                      route: '',
-                    ),
-                    isSelected: false,
-                    isDestructive: true,
-                    onTap: () => context.read<AuthCubit>().logout(),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-            // User card
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.06),
-                      Colors.white.withValues(alpha: 0.02),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.08),
-                  ),
-                ),
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const _PreviewPortfolioButton(),
+              const SizedBox(height: 12),
+              const Divider(height: 1),
+              const SizedBox(height: 12),
+              // User row
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Row(
                   children: [
-                    // Avatar with gradient + glow
                     Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [AppColors.primary, AppColors.secondary],
-                        ),
+                      width: 32,
+                      height: 32,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.35),
-                            blurRadius: 10,
-                          ),
-                        ],
                       ),
                       child: Center(
                         child: Text(
                           initial,
                           style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
+                            color: AppColors.onPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
                           ),
                         ),
                       ),
@@ -307,16 +198,16 @@ class _Sidebar extends StatelessWidget {
                           const Text(
                             'Admin',
                             style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
+                              color: AppColors.ink,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           Text(
                             email,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.32),
-                              fontSize: 10,
+                            style: const TextStyle(
+                              color: AppColors.textTertiary,
+                              fontSize: 12,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -324,35 +215,77 @@ class _Sidebar extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF4ADE80),
-                        shape: BoxShape.circle,
+                    Tooltip(
+                      message: 'Log out',
+                      child: Pressable(
+                        semanticLabel: 'Log out',
+                        onTap: () {
+                          if (demoMode) {
+                            context.go('/login');
+                          } else {
+                            context.read<AuthCubit>().logout();
+                          }
+                        },
+                        builder: (context, hovered) => AnimatedContainer(
+                          duration: AppMotion.of(context, AppMotion.fast),
+                          curve: AppMotion.ease,
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: hovered
+                                ? const Color(0xFFFEF3F2)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.logout_rounded,
+                            size: 18,
+                            color: hovered
+                                ? AppColors.danger
+                                : AppColors.textTertiary,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
   }
 }
 
-// ── Preview Portfolio button ──────────────────────────────────────────────────
+class _DemoBadge extends StatelessWidget {
+  const _DemoBadge();
 
-class _PreviewPortfolioButton extends StatefulWidget {
   @override
-  State<_PreviewPortfolioButton> createState() =>
-      _PreviewPortfolioButtonState();
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF4E5),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        'DEMO',
+        style: AppFonts.monoStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+          color: AppColors.warning,
+          letterSpacing: 0.6,
+        ),
+      ),
+    );
+  }
 }
 
-class _PreviewPortfolioButtonState extends State<_PreviewPortfolioButton> {
-  bool _hovered = false;
+// ── Preview Portfolio button ──────────────────────────────────────────────────
+
+class _PreviewPortfolioButton extends StatelessWidget {
+  const _PreviewPortfolioButton();
 
   Future<void> _open() async {
     final uri = Uri.parse(AppLinks.portfolio);
@@ -361,85 +294,35 @@ class _PreviewPortfolioButtonState extends State<_PreviewPortfolioButton> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: _open,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: _hovered
-                  ? [
-                      AppColors.primary.withValues(alpha: 0.2),
-                      AppColors.secondary.withValues(alpha: 0.12),
-                    ]
-                  : [
-                      AppColors.primary.withValues(alpha: 0.08),
-                      AppColors.secondary.withValues(alpha: 0.04),
-                    ],
-            ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _hovered
-                  ? AppColors.primary.withValues(alpha: 0.45)
-                  : AppColors.primary.withValues(alpha: 0.18),
-            ),
-            boxShadow: _hovered
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.18),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.primary.withValues(alpha: 0.25),
-                      AppColors.primary.withValues(alpha: 0.08),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.open_in_new_rounded,
-                    color: AppColors.primary, size: 15),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Preview Portfolio',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: _hovered
-                        ? AppColors.primary
-                        : Colors.white.withValues(alpha: 0.55),
-                    letterSpacing: 0.1,
-                  ),
+    return Pressable(
+      onTap: _open,
+      semanticLabel: 'Preview portfolio',
+      builder: (context, hovered) => AnimatedContainer(
+        duration: AppMotion.of(context, AppMotion.fast),
+        curve: AppMotion.ease,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: hovered ? AppColors.background : AppColors.surface,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AppColors.borderStrong),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.open_in_new_rounded, color: AppColors.ink, size: 16),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Preview portfolio',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.ink,
                 ),
               ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 10,
-                color: _hovered
-                    ? AppColors.primary.withValues(alpha: 0.7)
-                    : Colors.white.withValues(alpha: 0.2),
-              ),
-            ],
-          ),
+            ),
+            Icon(Icons.arrow_outward_rounded,
+                size: 14, color: AppColors.textTertiary),
+          ],
         ),
       ),
     );
@@ -457,142 +340,61 @@ class _NavItem {
 
 // ── Sidebar item ──────────────────────────────────────────────────────────────
 
-class _SidebarItem extends StatefulWidget {
+class _SidebarItem extends StatelessWidget {
   final _NavItem item;
   final bool isSelected;
-  final bool isDestructive;
   final VoidCallback onTap;
 
   const _SidebarItem({
     required this.item,
     required this.isSelected,
     required this.onTap,
-    this.isDestructive = false,
   });
 
   @override
-  State<_SidebarItem> createState() => _SidebarItemState();
-}
-
-class _SidebarItemState extends State<_SidebarItem> {
-  bool _hovered = false;
-
-  @override
   Widget build(BuildContext context) {
-    final accent =
-        widget.isDestructive ? Colors.redAccent : AppColors.primary;
-    final isActive = widget.isSelected;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+    return Pressable(
+      onTap: onTap,
+      semanticLabel: item.label,
+      builder: (context, hovered) {
+        final Color bg = isSelected
+            ? AppColors.primarySoft
+            : hovered
+                ? AppColors.ink.withValues(alpha: 0.04)
+                : Colors.transparent;
+        final Color fg = isSelected
+            ? AppColors.primary
+            : hovered
+                ? AppColors.ink
+                : AppColors.textSecondary;
+        return AnimatedContainer(
+          duration: AppMotion.of(context, AppMotion.fast),
+          curve: AppMotion.ease,
           margin: const EdgeInsets.only(bottom: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
           decoration: BoxDecoration(
-            gradient: isActive
-                ? LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [
-                      accent.withValues(alpha: 0.18),
-                      accent.withValues(alpha: 0.04),
-                    ],
-                  )
-                : _hovered
-                    ? LinearGradient(
-                        colors: [
-                          Colors.white.withValues(alpha: 0.05),
-                          Colors.transparent,
-                        ],
-                      )
-                    : null,
-            borderRadius: BorderRadius.circular(12),
-            border: isActive
-                ? Border.all(color: accent.withValues(alpha: 0.22))
-                : null,
+            color: bg,
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
             children: [
-              // Left accent line for active
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: isActive ? 3 : 0,
-                height: isActive ? 20 : 0,
-                margin: EdgeInsets.only(right: isActive ? 6 : 0),
-                decoration: BoxDecoration(
-                  color: accent,
-                  borderRadius: BorderRadius.circular(4),
-                  boxShadow: isActive
-                      ? [
-                          BoxShadow(
-                            color: accent.withValues(alpha: 0.7),
-                            blurRadius: 8,
-                          )
-                        ]
-                      : [],
-                ),
-              ),
-              // Icon
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: (isActive || _hovered)
-                      ? accent.withValues(alpha: 0.12)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: Icon(
-                  widget.item.icon,
-                  size: 17,
-                  color: isActive
-                      ? accent
-                      : _hovered
-                          ? Colors.white.withValues(alpha: 0.7)
-                          : Colors.white.withValues(alpha: 0.3),
-                ),
-              ),
-              const SizedBox(width: 9),
+              Icon(item.icon, size: 18, color: fg),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  widget.item.label,
+                  item.label,
                   style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight:
-                        isActive ? FontWeight.w600 : FontWeight.w400,
-                    color: isActive
-                        ? accent
-                        : _hovered
-                            ? Colors.white.withValues(alpha: 0.75)
-                            : Colors.white.withValues(alpha: 0.38),
-                    letterSpacing: 0.1,
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    color: fg,
+                    letterSpacing: -0.1,
                   ),
                 ),
               ),
-              if (isActive)
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: accent,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: accent.withValues(alpha: 0.8),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                ),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

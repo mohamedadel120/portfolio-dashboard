@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/di/injection_container.dart' as di;
+import 'core/demo/demo_mode.dart';
 import 'features/auth/presentation/bloc/auth_cubit.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/dashboard/presentation/bloc/dashboard_cubit.dart';
@@ -19,7 +20,11 @@ import 'features/profile_info/presentation/bloc/profile_info_cubit.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Demo mode never talks to Firebase (see core/demo/demo_mode.dart).
+  if (!demoMode) {
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
+  }
 
   await di.init();
 
@@ -33,7 +38,9 @@ class AdminDashboardApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => AuthCubit()),
+        BlocProvider(
+          create: (context) => demoMode ? AuthCubit.demo() : AuthCubit(),
+        ),
         BlocProvider(
           create: (context) => di.sl<DashboardCubit>(),
         ),
@@ -81,7 +88,7 @@ class _AppRouterHostState extends State<_AppRouterHost> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Portfolio Admin',
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
     );

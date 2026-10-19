@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:admin_dashboard/core/demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_dashboard/core/constants/app_colors.dart';
@@ -22,7 +23,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
   void initState() {
     super.initState();
     final authState = context.read<AuthCubit>().state;
-    if (authState is Authenticated) {
+    if (demoMode || authState is Authenticated) {
       final state = context.read<ExperienceCubit>().state;
       if (state is ExperienceInitial || state is ExperienceError) {
         context.read<ExperienceCubit>().fetchExperiences();
@@ -58,7 +59,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
                       Text(
                         'Work Experience',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              color: Colors.white,
+                              color: AppColors.ink,
                               fontWeight: FontWeight.bold,
                             ),
                       ),
@@ -68,7 +69,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
                         style: Theme.of(context)
                             .textTheme
                             .bodyMedium
-                            ?.copyWith(color: Colors.white54),
+                            ?.copyWith(color: AppColors.textTertiary),
                       ),
                     ],
                   ),
@@ -87,7 +88,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
                               boxShadow: isHovered
                                   ? [
                                       BoxShadow(
-                                        color: AppColors.primary.withOpacity(0.4),
+                                        color: AppColors.primary.withValues(alpha: 0.4),
                                         blurRadius: 12,
                                         offset: const Offset(0, 4),
                                       ),
@@ -100,7 +101,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
                               label: const Text('Add Experience'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.black,
+                                foregroundColor: AppColors.onPrimary,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 28,
                                   vertical: 18,
@@ -134,7 +135,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
                       return Center(
                         child: Text(
                           'Error: ${state.message}',
-                          style: const TextStyle(color: Colors.red),
+                          style: const TextStyle(color: AppColors.danger),
                         ),
                       );
                     } else if (state is ExperienceLoaded) {
@@ -147,7 +148,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
                         decoration: BoxDecoration(
                           color: AppColors.surface,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white12),
+                          border: Border.all(color: AppColors.border),
                         ),
                         child: ListView.builder(
                           physics: const BouncingScrollPhysics(),
@@ -183,7 +184,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
               Container(
                 width: 2,
                 height: 20,
-                color: isFirst ? Colors.transparent : Colors.white12,
+                color: isFirst ? Colors.transparent : AppColors.border,
               ),
               Container(
                 width: 16,
@@ -194,7 +195,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
                   border: Border.all(color: AppColors.primary, width: 3),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 8,
                       spreadRadius: 2,
                     ),
@@ -204,7 +205,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
               Expanded(
                 child: Container(
                   width: 2,
-                  color: isLast ? Colors.transparent : Colors.white12,
+                  color: isLast ? Colors.transparent : AppColors.border,
                 ),
               ),
             ],
@@ -224,10 +225,10 @@ class _ExperiencePageState extends State<ExperiencePage> {
                     margin: const EdgeInsets.only(bottom: 24),
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: isHovered ? Colors.white.withOpacity(0.04) : Colors.white.withOpacity(0.015),
+                      color: isHovered ? AppColors.ink.withValues(alpha: 0.03) : AppColors.ink.withValues(alpha: 0.03),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isHovered ? AppColors.primary.withOpacity(0.4) : Colors.white12,
+                        color: isHovered ? AppColors.primary.withValues(alpha: 0.4) : AppColors.border,
                       ),
                     ),
                     child: Row(
@@ -238,9 +239,9 @@ class _ExperiencePageState extends State<ExperiencePage> {
                           width: 56,
                           height: 56,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
+                            color: AppColors.border,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white12),
+                            border: Border.all(color: AppColors.border),
                           ),
                           child: exp.logoUrl != null && exp.logoUrl!.isNotEmpty
                               ? ClipRRect(
@@ -279,7 +280,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
                                         style: const TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.white,
+                                          color: AppColors.ink,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -296,14 +297,14 @@ class _ExperiencePageState extends State<ExperiencePage> {
                                           const SizedBox(width: 8),
                                           const Text(
                                             '•',
-                                            style: TextStyle(color: Colors.white24),
+                                            style: TextStyle(color: AppColors.textTertiary),
                                           ),
                                           const SizedBox(width: 8),
                                           Text(
                                             exp.location,
                                             style: const TextStyle(
                                               fontSize: 14,
-                                              color: Colors.white38,
+                                              color: AppColors.textTertiary,
                                             ),
                                           ),
                                         ],
@@ -324,7 +325,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
                                         ),
                                         IconButton(
                                           icon: const Icon(Icons.delete_outline, size: 20),
-                                          color: Colors.redAccent,
+                                          color: AppColors.danger,
                                           onPressed: () => _confirmDelete(context, exp),
                                           tooltip: 'Delete Experience',
                                         ),
@@ -338,15 +339,15 @@ class _ExperiencePageState extends State<ExperiencePage> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.04),
+                                  color: AppColors.ink.withValues(alpha: 0.03),
                                   borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.white12),
+                                  border: Border.all(color: AppColors.border),
                                 ),
                                 child: Text(
                                   '${exp.startDate} — ${exp.endDate}',
                                   style: const TextStyle(
                                     fontSize: 12,
-                                    color: Colors.white60,
+                                    color: AppColors.textTertiary,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -369,7 +370,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
                                           style: const TextStyle(
                                             fontSize: 14,
                                             height: 1.5,
-                                            color: Colors.white70,
+                                            color: AppColors.textSecondary,
                                           ),
                                         ),
                                       ),
@@ -394,8 +395,8 @@ class _ExperiencePageState extends State<ExperiencePage> {
 
   Widget _buildShimmerLoading() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withOpacity(0.05),
-      highlightColor: Colors.white.withOpacity(0.15),
+      baseColor: AppColors.border,
+      highlightColor: AppColors.border,
       child: ListView.builder(
         padding: const EdgeInsets.all(24),
         itemCount: 3,
@@ -404,13 +405,13 @@ class _ExperiencePageState extends State<ExperiencePage> {
             padding: const EdgeInsets.only(bottom: 24),
             child: Row(
               children: [
-                const CircleAvatar(radius: 8, backgroundColor: Colors.white),
+                const CircleAvatar(radius: 8, backgroundColor: AppColors.ink),
                 const SizedBox(width: 24),
                 Expanded(
                   child: Container(
                     height: 140,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.ink,
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
@@ -428,16 +429,16 @@ class _ExperiencePageState extends State<ExperiencePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.history_edu_outlined, size: 64, color: Colors.white24),
+          const Icon(Icons.history_edu_outlined, size: 64, color: AppColors.textTertiary),
           const SizedBox(height: 16),
           const Text(
             'No work experience found',
-            style: TextStyle(color: Colors.white54, fontSize: 18),
+            style: TextStyle(color: AppColors.textTertiary, fontSize: 18),
           ),
           const SizedBox(height: 8),
           const Text(
             'Click "Add Experience" to create your first career timeline milestone.',
-            style: TextStyle(color: Colors.white38),
+            style: TextStyle(color: AppColors.textTertiary),
           ),
         ],
       ),
@@ -460,8 +461,8 @@ class _ExperiencePageState extends State<ExperiencePage> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.danger,
+              foregroundColor: AppColors.ink,
             ),
             onPressed: () {
               context.read<ExperienceCubit>().deleteExperience(exp.id);
@@ -478,7 +479,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.6),
+      barrierColor: Colors.black.withValues(alpha: 0.6),
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, animation, secondaryAnimation) {
         return BlocProvider.value(
@@ -573,12 +574,12 @@ class _ExperienceFormViewState extends State<ExperienceFormView> {
     return Container(
       width: 700,
       decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.85),
+        color: AppColors.surface.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+        border: Border.all(color: AppColors.border, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 40,
             spreadRadius: 5,
           ),
@@ -606,16 +607,16 @@ class _ExperienceFormViewState extends State<ExperienceFormView> {
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: AppColors.ink,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded, color: Colors.white54),
+                          icon: const Icon(Icons.close_rounded, color: AppColors.textTertiary),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
                     ),
-                    const Divider(color: Colors.white12, height: 32),
+                    const Divider(color: AppColors.border, height: 32),
 
                     Row(
                       children: [
@@ -624,11 +625,11 @@ class _ExperienceFormViewState extends State<ExperienceFormView> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Role / Position *', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                              const Text('Role / Position *', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _roleController,
-                                style: const TextStyle(color: Colors.white),
+                                style: const TextStyle(color: AppColors.ink),
                                 decoration: _inputDecoration('e.g. Senior Flutter Developer'),
                                 validator: (v) => v == null || v.trim().isEmpty ? 'Role is required' : null,
                               ),
@@ -641,11 +642,11 @@ class _ExperienceFormViewState extends State<ExperienceFormView> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Company / Organization *', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                              const Text('Company / Organization *', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _companyController,
-                                style: const TextStyle(color: Colors.white),
+                                style: const TextStyle(color: AppColors.ink),
                                 decoration: _inputDecoration('e.g. Google'),
                                 validator: (v) => v == null || v.trim().isEmpty ? 'Company is required' : null,
                               ),
@@ -663,11 +664,11 @@ class _ExperienceFormViewState extends State<ExperienceFormView> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Start Date *', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                              const Text('Start Date *', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _startDateController,
-                                style: const TextStyle(color: Colors.white),
+                                style: const TextStyle(color: AppColors.ink),
                                 decoration: _inputDecoration('e.g. Jan 2023'),
                                 validator: (v) => v == null || v.trim().isEmpty ? 'Start Date is required' : null,
                               ),
@@ -680,11 +681,11 @@ class _ExperienceFormViewState extends State<ExperienceFormView> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('End Date *', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                              const Text('End Date *', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _endDateController,
-                                style: const TextStyle(color: Colors.white),
+                                style: const TextStyle(color: AppColors.ink),
                                 decoration: _inputDecoration('e.g. Dec 2024 or Present'),
                                 validator: (v) => v == null || v.trim().isEmpty ? 'End Date is required' : null,
                               ),
@@ -702,11 +703,11 @@ class _ExperienceFormViewState extends State<ExperienceFormView> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Location', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                              const Text('Location', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _locationController,
-                                style: const TextStyle(color: Colors.white),
+                                style: const TextStyle(color: AppColors.ink),
                                 decoration: _inputDecoration('e.g. Remote or San Francisco, CA'),
                               ),
                             ],
@@ -718,11 +719,11 @@ class _ExperienceFormViewState extends State<ExperienceFormView> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Company Logo URL', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                              const Text('Company Logo URL', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _logoUrlController,
-                                style: const TextStyle(color: Colors.white),
+                                style: const TextStyle(color: AppColors.ink),
                                 decoration: _inputDecoration('e.g. https://domain.com/logo.png'),
                               ),
                             ],
@@ -735,12 +736,12 @@ class _ExperienceFormViewState extends State<ExperienceFormView> {
                     // Description Points
                     const Text(
                       'Responsibilities / Description * (One bullet point per line)',
-                      style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+                      style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _descriptionController,
-                      style: const TextStyle(color: Colors.white, height: 1.5),
+                      style: const TextStyle(color: AppColors.ink, height: 1.5),
                       maxLines: 6,
                       decoration: _inputDecoration(
                         'Designed Clean Architecture structure.\nIntegrated third-party APIs.\nLed team of developers.',
@@ -755,14 +756,14 @@ class _ExperienceFormViewState extends State<ExperienceFormView> {
                       children: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+                          child: const Text('Cancel', style: TextStyle(color: AppColors.textTertiary)),
                         ),
                         const SizedBox(width: 16),
                         ElevatedButton(
                           onPressed: _save,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.black,
+                            foregroundColor: AppColors.onPrimary,
                             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                             textStyle: const TextStyle(fontWeight: FontWeight.bold),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -784,11 +785,11 @@ class _ExperienceFormViewState extends State<ExperienceFormView> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Colors.white30, fontSize: 14),
+      hintStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 14),
       filled: true,
-      fillColor: Colors.white.withOpacity(0.03),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
+      fillColor: AppColors.ink.withValues(alpha: 0.03),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
     );
   }

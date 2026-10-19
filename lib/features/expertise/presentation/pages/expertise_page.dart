@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:admin_dashboard/core/demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_dashboard/core/constants/app_colors.dart';
@@ -24,7 +25,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
   void initState() {
     super.initState();
     final authState = context.read<AuthCubit>().state;
-    if (authState is Authenticated) {
+    if (demoMode || authState is Authenticated) {
       final state = context.read<ExpertiseCubit>().state;
       if (state is ExpertiseInitial || state is ExpertiseError) {
         context.read<ExpertiseCubit>().fetchExpertise();
@@ -60,7 +61,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
                       Text(
                         'Expertise & Skills',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              color: Colors.white,
+                              color: AppColors.ink,
                               fontWeight: FontWeight.bold,
                             ),
                       ),
@@ -70,7 +71,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
                         style: Theme.of(context)
                             .textTheme
                             .bodyMedium
-                            ?.copyWith(color: Colors.white54),
+                            ?.copyWith(color: AppColors.textTertiary),
                       ),
                     ],
                   ),
@@ -89,7 +90,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
                               boxShadow: isHovered
                                   ? [
                                       BoxShadow(
-                                        color: AppColors.primary.withOpacity(0.4),
+                                        color: AppColors.primary.withValues(alpha: 0.4),
                                         blurRadius: 12,
                                         offset: const Offset(0, 4),
                                       ),
@@ -102,7 +103,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
                               label: const Text('Add Skill'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.black,
+                                foregroundColor: AppColors.onPrimary,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 28,
                                   vertical: 18,
@@ -136,7 +137,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
                       return Center(
                         child: Text(
                           'Error: ${state.message}',
-                          style: const TextStyle(color: Colors.red),
+                          style: const TextStyle(color: AppColors.danger),
                         ),
                       );
                     } else if (state is ExpertiseLoaded) {
@@ -173,17 +174,17 @@ class _ExpertisePageState extends State<ExpertisePage> {
                                         });
                                       }
                                     },
-                                    selectedColor: AppColors.primary.withOpacity(0.2),
+                                    selectedColor: AppColors.primary.withValues(alpha: 0.2),
                                     checkmarkColor: AppColors.primary,
                                     labelStyle: TextStyle(
-                                      color: isSelected ? AppColors.primary : Colors.white60,
+                                      color: isSelected ? AppColors.primary : AppColors.textTertiary,
                                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                     ),
-                                    backgroundColor: Colors.white.withOpacity(0.03),
+                                    backgroundColor: AppColors.ink.withValues(alpha: 0.03),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(20),
                                       side: BorderSide(
-                                        color: isSelected ? AppColors.primary : Colors.white12,
+                                        color: isSelected ? AppColors.primary : AppColors.border,
                                       ),
                                     ),
                                   ),
@@ -199,7 +200,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
                               decoration: BoxDecoration(
                                 color: AppColors.surface,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: Colors.white12),
+                                border: Border.all(color: AppColors.border),
                               ),
                               child: GridView.builder(
                                 padding: const EdgeInsets.all(24),
@@ -242,10 +243,10 @@ class _ExpertisePageState extends State<ExpertisePage> {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: isHovered ? Colors.white.withOpacity(0.04) : Colors.white.withOpacity(0.01),
+              color: isHovered ? AppColors.ink.withValues(alpha: 0.03) : AppColors.ink.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isHovered ? skill.color.withOpacity(0.5) : Colors.white12,
+                color: isHovered ? skill.color.withValues(alpha: 0.5) : AppColors.border,
                 width: isHovered ? 1.5 : 1.0,
               ),
             ),
@@ -265,7 +266,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: isHovered ? skill.color : Colors.white,
+                              color: isHovered ? skill.color : AppColors.ink,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -274,14 +275,14 @@ class _ExpertisePageState extends State<ExpertisePage> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: skill.color.withOpacity(0.1),
+                              color: skill.color.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               skill.category,
                               style: TextStyle(
                                 fontSize: 11,
-                                color: skill.color.withOpacity(0.9),
+                                color: skill.color.withValues(alpha: 0.9),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -302,7 +303,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete_outline, size: 20),
-                            color: Colors.redAccent,
+                            color: AppColors.danger,
                             onPressed: () => _confirmDelete(context, skill),
                             tooltip: 'Delete Skill',
                           ),
@@ -319,7 +320,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
                       children: [
                         const Text(
                           'Proficiency',
-                          style: TextStyle(color: Colors.white38, fontSize: 12),
+                          style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
                         ),
                         Text(
                           '${skill.percentage}%',
@@ -336,7 +337,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: skill.percentage / 100.0,
-                        backgroundColor: Colors.white12,
+                        backgroundColor: AppColors.border,
                         valueColor: AlwaysStoppedAnimation<Color>(skill.color),
                         minHeight: 6,
                       ),
@@ -353,8 +354,8 @@ class _ExpertisePageState extends State<ExpertisePage> {
 
   Widget _buildShimmerLoading() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withOpacity(0.05),
-      highlightColor: Colors.white.withOpacity(0.15),
+      baseColor: AppColors.border,
+      highlightColor: AppColors.border,
       child: GridView.builder(
         padding: const EdgeInsets.all(24),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -367,7 +368,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
         itemBuilder: (context, index) {
           return Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.ink,
               borderRadius: BorderRadius.circular(16),
             ),
           );
@@ -381,16 +382,16 @@ class _ExpertisePageState extends State<ExpertisePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.star_outline, size: 64, color: Colors.white24),
+          const Icon(Icons.star_outline, size: 64, color: AppColors.textTertiary),
           const SizedBox(height: 16),
           const Text(
             'No expertise items found',
-            style: TextStyle(color: Colors.white54, fontSize: 18),
+            style: TextStyle(color: AppColors.textTertiary, fontSize: 18),
           ),
           const SizedBox(height: 8),
           const Text(
             'Click "Add Skill" to create your first expertise item.',
-            style: TextStyle(color: Colors.white38),
+            style: TextStyle(color: AppColors.textTertiary),
           ),
         ],
       ),
@@ -413,8 +414,8 @@ class _ExpertisePageState extends State<ExpertisePage> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.danger,
+              foregroundColor: AppColors.ink,
             ),
             onPressed: () {
               context.read<ExpertiseCubit>().deleteExpertise(skill.id);
@@ -431,7 +432,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.6),
+      barrierColor: Colors.black.withValues(alpha: 0.6),
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, animation, secondaryAnimation) {
         return BlocProvider.value(
@@ -537,12 +538,12 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
     return Container(
       width: 600,
       decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.85),
+        color: AppColors.surface.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+        border: Border.all(color: AppColors.border, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 40,
             spreadRadius: 5,
           ),
@@ -570,30 +571,30 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: AppColors.ink,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded, color: Colors.white54),
+                          icon: const Icon(Icons.close_rounded, color: AppColors.textTertiary),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
                     ),
-                    const Divider(color: Colors.white12, height: 32),
+                    const Divider(color: AppColors.border, height: 32),
 
                     // Skill Name Input
-                    const Text('Skill Title *', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                    const Text('Skill Title *', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _titleController,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: AppColors.ink),
                       decoration: InputDecoration(
                         hintText: 'e.g. Flutter, NodeJS, Git',
-                        hintStyle: const TextStyle(color: Colors.white30),
+                        hintStyle: const TextStyle(color: AppColors.textTertiary),
                         filled: true,
-                        fillColor: Colors.white.withOpacity(0.03),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
+                        fillColor: AppColors.ink.withValues(alpha: 0.03),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
                         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
                       ),
                       validator: (v) => v == null || v.trim().isEmpty ? 'Skill title is required' : null,
@@ -601,17 +602,17 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
                     const SizedBox(height: 20),
 
                     // Category Select
-                    const Text('Category *', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                    const Text('Category *', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       value: _categoryPresets.contains(_categoryController.text) ? _categoryController.text : 'Other',
                       dropdownColor: AppColors.surface,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: AppColors.ink),
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: Colors.white.withOpacity(0.03),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
+                        fillColor: AppColors.ink.withValues(alpha: 0.03),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
                         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
                       ),
                       items: _categoryPresets.map((category) {
@@ -631,20 +632,20 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
                     const SizedBox(height: 20),
 
                     if (_categoryController.text == 'Other') ...[
-                      const Text('Custom Category Name', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                      const Text('Custom Category Name', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       TextFormField(
                         onChanged: (val) {
                           _categoryController.text = val;
                         },
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: AppColors.ink),
                         decoration: InputDecoration(
                           hintText: 'e.g. Databases, Machine Learning',
-                          hintStyle: const TextStyle(color: Colors.white30),
+                          hintStyle: const TextStyle(color: AppColors.textTertiary),
                           filled: true,
-                          fillColor: Colors.white.withOpacity(0.03),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
+                          fillColor: AppColors.ink.withValues(alpha: 0.03),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
                           focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
                         ),
                       ),
@@ -655,7 +656,7 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Proficiency Level', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                        const Text('Proficiency Level', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                         Text('${_percentage.toInt()}%', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 16)),
                       ],
                     ),
@@ -663,9 +664,9 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         activeTrackColor: AppColors.primary,
-                        inactiveTrackColor: Colors.white12,
+                        inactiveTrackColor: AppColors.border,
                         thumbColor: AppColors.primary,
-                        overlayColor: AppColors.primary.withOpacity(0.2),
+                        overlayColor: AppColors.primary.withValues(alpha: 0.2),
                       ),
                       child: Slider(
                         value: _percentage,
@@ -682,23 +683,23 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
                     const SizedBox(height: 20),
 
                     // Hex Color Input & Preset Selector
-                    const Text('Display Color (Hex)', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                    const Text('Display Color (Hex)', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     Row(
                       children: [
                         Expanded(
                           child: TextFormField(
                             controller: _colorController,
-                            style: const TextStyle(color: Colors.white),
+                            style: const TextStyle(color: AppColors.ink),
                             decoration: InputDecoration(
                               prefixText: '# ',
-                              prefixStyle: const TextStyle(color: Colors.white30),
+                              prefixStyle: const TextStyle(color: AppColors.textTertiary),
                               hintText: '00D9FF',
-                              hintStyle: const TextStyle(color: Colors.white30),
+                              hintStyle: const TextStyle(color: AppColors.textTertiary),
                               filled: true,
-                              fillColor: Colors.white.withOpacity(0.03),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
-                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
+                              fillColor: AppColors.ink.withValues(alpha: 0.03),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
                               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
                             ),
                             validator: (v) {
@@ -732,7 +733,7 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
                                   color: c,
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: isSelected ? Colors.white : Colors.transparent,
+                                    color: isSelected ? AppColors.ink : Colors.transparent,
                                     width: 2,
                                   ),
                                 ),
@@ -750,14 +751,14 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
                       children: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+                          child: const Text('Cancel', style: TextStyle(color: AppColors.textTertiary)),
                         ),
                         const SizedBox(width: 16),
                         ElevatedButton(
                           onPressed: _save,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.black,
+                            foregroundColor: AppColors.onPrimary,
                             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                             textStyle: const TextStyle(fontWeight: FontWeight.bold),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

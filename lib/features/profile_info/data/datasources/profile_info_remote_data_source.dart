@@ -17,8 +17,19 @@ class ProfileInfoRemoteDataSource {
     return ProfileInfoModel.fromJson(mainJson, items);
   }
 
+  /// Merge, never replace: the site may store fields on these documents
+  /// that this model does not know (for example `downloadsCount` or
+  /// `ratings`), and a plain `set()` would delete them.
+  static final SetOptions writeOptions = SetOptions(merge: true);
+
   Future<void> updateProfileInfo(ProfileInfoModel profile) async {
-    await _firestore.collection('profile_info').doc('main').set(profile.toMainJson());
-    await _firestore.collection('profile_info').doc('tech_stack').set(profile.toTechStackJson());
+    await _firestore
+        .collection('profile_info')
+        .doc('main')
+        .set(profile.toMainJson(), writeOptions);
+    await _firestore
+        .collection('profile_info')
+        .doc('tech_stack')
+        .set(profile.toTechStackJson(), writeOptions);
   }
 }

@@ -75,7 +75,7 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: $e'), backgroundColor: Colors.redAccent),
+          SnackBar(content: Text('Upload failed: $e'), backgroundColor: AppColors.danger),
         );
       }
     } finally {
@@ -108,7 +108,7 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                 Expanded(
                   child: Text(
                     '${widget.label} (${images.length})',
-                    style: const TextStyle(fontSize: 14, color: Colors.white54),
+                    style: const TextStyle(fontSize: 14, color: AppColors.textTertiary),
                   ),
                 ),
                 TextButton.icon(
@@ -136,13 +136,13 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: _isHoveringDropzone 
-                          ? AppColors.primary.withOpacity(0.08) 
-                          : Colors.white.withOpacity(0.02),
+                          ? AppColors.primary.withValues(alpha: 0.08) 
+                          : AppColors.ink.withValues(alpha: 0.03),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: _isHoveringDropzone
-                            ? AppColors.primary.withOpacity(0.5)
-                            : Colors.white12,
+                            ? AppColors.primary.withValues(alpha: 0.5)
+                            : AppColors.border,
                       ),
                     ),
                     child: Center(
@@ -152,13 +152,13 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                           Icon(
                             Icons.collections_outlined,
                             size: 32,
-                            color: _isHoveringDropzone ? AppColors.primary : Colors.white54,
+                            color: _isHoveringDropzone ? AppColors.primary : AppColors.textTertiary,
                           ),
                           const SizedBox(height: 12),
                           AnimatedDefaultTextStyle(
                             duration: const Duration(milliseconds: 300),
                             style: TextStyle(
-                              color: _isHoveringDropzone ? Colors.white : Colors.white54,
+                              color: _isHoveringDropzone ? AppColors.ink : AppColors.textTertiary,
                               fontWeight: _isHoveringDropzone ? FontWeight.w600 : FontWeight.normal,
                             ),
                             child: const Text('Click to upload gallery screenshots'),
@@ -174,9 +174,9 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                 duration: const Duration(milliseconds: 300),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.02),
+                  color: AppColors.ink.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white12),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Wrap(
                   spacing: 12,
@@ -200,12 +200,12 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isHovered ? AppColors.primary.withOpacity(0.8) : Colors.white24,
+                              color: isHovered ? AppColors.primary.withValues(alpha: 0.8) : AppColors.textTertiary,
                             ),
                             boxShadow: isHovered 
                                 ? [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.3),
+                                      color: Colors.black.withValues(alpha: 0.3),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     )
@@ -221,7 +221,7 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                                   Image.network(url, fit: BoxFit.cover)
                                 else
                                   const Center(
-                                    child: Text('Local\nAsset', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: Colors.white54))
+                                    child: Text('Local\nAsset', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: AppColors.textTertiary))
                                   ),
                                 
                                 // Overlay
@@ -229,7 +229,7 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                                   opacity: isHovered ? 1.0 : 0.0,
                                   duration: const Duration(milliseconds: 200),
                                   child: Container(
-                                    color: Colors.black.withOpacity(0.6),
+                                    color: Colors.black.withValues(alpha: 0.6),
                                   ),
                                 ),
                                 
@@ -237,14 +237,14 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                                 if (isHovered)
                                   Center(
                                     child: Material(
-                                      color: Colors.redAccent.withOpacity(0.9),
+                                      color: AppColors.danger.withValues(alpha: 0.9),
                                       shape: const CircleBorder(),
                                       child: InkWell(
                                         onTap: () => _removeImage(idx),
                                         customBorder: const CircleBorder(),
                                         child: const Padding(
                                           padding: EdgeInsets.all(8.0),
-                                          child: Icon(Icons.delete_outline, size: 20, color: Colors.white),
+                                          child: Icon(Icons.delete_outline, size: 20, color: AppColors.ink),
                                         ),
                                       ),
                                     ),
@@ -271,7 +271,7 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                             const SizedBox(height: 12),
                             Text(
                               '${(_uploadProgress * 100).toStringAsFixed(0)}%',
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              style: const TextStyle(color: AppColors.ink, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),

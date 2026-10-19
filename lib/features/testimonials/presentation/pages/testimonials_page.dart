@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:admin_dashboard/core/demo/demo_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_dashboard/core/constants/app_colors.dart';
@@ -22,7 +23,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
   void initState() {
     super.initState();
     final authState = context.read<AuthCubit>().state;
-    if (authState is Authenticated) {
+    if (demoMode || authState is Authenticated) {
       final state = context.read<TestimonialsCubit>().state;
       if (state is TestimonialsInitial || state is TestimonialsError) {
         context.read<TestimonialsCubit>().fetchTestimonials();
@@ -57,7 +58,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                       Text(
                         'Testimonials',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              color: Colors.white,
+                              color: AppColors.ink,
                               fontWeight: FontWeight.bold,
                             ),
                       ),
@@ -67,7 +68,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                         style: Theme.of(context)
                             .textTheme
                             .bodyMedium
-                            ?.copyWith(color: Colors.white54),
+                            ?.copyWith(color: AppColors.textTertiary),
                       ),
                     ],
                   ),
@@ -86,7 +87,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                               boxShadow: isHovered
                                   ? [
                                       BoxShadow(
-                                        color: AppColors.primary.withOpacity(0.4),
+                                        color: AppColors.primary.withValues(alpha: 0.4),
                                         blurRadius: 12,
                                         offset: const Offset(0, 4),
                                       ),
@@ -99,7 +100,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                               label: const Text('Add Testimonial'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.black,
+                                foregroundColor: AppColors.onPrimary,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 28,
                                   vertical: 18,
@@ -131,7 +132,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                       return Center(
                         child: Text(
                           'Error: ${state.message}',
-                          style: const TextStyle(color: Colors.red),
+                          style: const TextStyle(color: AppColors.danger),
                         ),
                       );
                     } else if (state is TestimonialsLoaded) {
@@ -143,7 +144,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                         decoration: BoxDecoration(
                           color: AppColors.surface,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white12),
+                          border: Border.all(color: AppColors.border),
                         ),
                         child: GridView.builder(
                           padding: const EdgeInsets.all(24),
@@ -182,10 +183,10 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: isHovered ? Colors.white.withOpacity(0.04) : Colors.white.withOpacity(0.015),
+              color: isHovered ? AppColors.ink.withValues(alpha: 0.03) : AppColors.ink.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isHovered ? AppColors.primary.withOpacity(0.4) : Colors.white12,
+                color: isHovered ? AppColors.primary.withValues(alpha: 0.4) : AppColors.border,
               ),
             ),
             child: Column(
@@ -196,7 +197,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                   children: [
                     CircleAvatar(
                       radius: 22,
-                      backgroundColor: AppColors.primary.withOpacity(0.15),
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.15),
                       backgroundImage: (t.imageUrl != null && t.imageUrl!.isNotEmpty)
                           ? NetworkImage(t.imageUrl!)
                           : null,
@@ -214,13 +215,13 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                         children: [
                           Text(
                             t.name,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                            style: const TextStyle(color: AppColors.ink, fontWeight: FontWeight.bold, fontSize: 15),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             '${t.role} • ${t.company}',
-                            style: const TextStyle(color: Colors.white38, fontSize: 12),
+                            style: const TextStyle(color: AppColors.textTertiary, fontSize: 12),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -243,7 +244,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                           const SizedBox(width: 12),
                           IconButton(
                             icon: const Icon(Icons.delete_outline, size: 18),
-                            color: Colors.redAccent,
+                            color: AppColors.danger,
                             onPressed: () => _confirmDelete(context, t),
                             tooltip: 'Delete Testimonial',
                             padding: EdgeInsets.zero,
@@ -260,7 +261,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                     return Icon(
                       i < t.rating ? Icons.star_rounded : Icons.star_outline_rounded,
                       size: 16,
-                      color: i < t.rating ? Colors.amber : Colors.white24,
+                      color: i < t.rating ? AppColors.warning : AppColors.textTertiary,
                     );
                   }),
                 ),
@@ -268,7 +269,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                 Expanded(
                   child: Text(
                     t.opinion,
-                    style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.5),
                     maxLines: 5,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -283,8 +284,8 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
 
   Widget _buildShimmerLoading() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withOpacity(0.05),
-      highlightColor: Colors.white.withOpacity(0.15),
+      baseColor: AppColors.border,
+      highlightColor: AppColors.border,
       child: GridView.builder(
         padding: const EdgeInsets.all(24),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -297,7 +298,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
         itemBuilder: (context, index) {
           return Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.ink,
               borderRadius: BorderRadius.circular(16),
             ),
           );
@@ -311,16 +312,16 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.rate_review_outlined, size: 64, color: Colors.white24),
+          const Icon(Icons.rate_review_outlined, size: 64, color: AppColors.textTertiary),
           const SizedBox(height: 16),
           const Text(
             'No testimonials found',
-            style: TextStyle(color: Colors.white54, fontSize: 18),
+            style: TextStyle(color: AppColors.textTertiary, fontSize: 18),
           ),
           const SizedBox(height: 8),
           const Text(
             'Click "Add Testimonial" to add your first client review.',
-            style: TextStyle(color: Colors.white38),
+            style: TextStyle(color: AppColors.textTertiary),
           ),
         ],
       ),
@@ -343,8 +344,8 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.danger,
+              foregroundColor: AppColors.ink,
             ),
             onPressed: () {
               context.read<TestimonialsCubit>().deleteTestimonial(t.id);
@@ -361,7 +362,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.6),
+      barrierColor: Colors.black.withValues(alpha: 0.6),
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, animation, secondaryAnimation) {
         return BlocProvider.value(
@@ -449,11 +450,11 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Colors.white30, fontSize: 14),
+      hintStyle: const TextStyle(color: AppColors.textTertiary, fontSize: 14),
       filled: true,
-      fillColor: Colors.white.withOpacity(0.03),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
+      fillColor: AppColors.ink.withValues(alpha: 0.03),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
     );
   }
@@ -463,12 +464,12 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
     return Container(
       width: 700,
       decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.85),
+        color: AppColors.surface.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+        border: Border.all(color: AppColors.border, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 40,
             spreadRadius: 5,
           ),
@@ -495,16 +496,16 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: AppColors.ink,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded, color: Colors.white54),
+                          icon: const Icon(Icons.close_rounded, color: AppColors.textTertiary),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
                     ),
-                    const Divider(color: Colors.white12, height: 32),
+                    const Divider(color: AppColors.border, height: 32),
 
                     Row(
                       children: [
@@ -512,11 +513,11 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Name *', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                              const Text('Name *', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _nameController,
-                                style: const TextStyle(color: Colors.white),
+                                style: const TextStyle(color: AppColors.ink),
                                 decoration: _inputDecoration('e.g. Omar Ali'),
                                 validator: (v) => v == null || v.trim().isEmpty ? 'Name is required' : null,
                               ),
@@ -528,11 +529,11 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Role *', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                              const Text('Role *', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _roleController,
-                                style: const TextStyle(color: Colors.white),
+                                style: const TextStyle(color: AppColors.ink),
                                 decoration: _inputDecoration('e.g. CEO'),
                                 validator: (v) => v == null || v.trim().isEmpty ? 'Role is required' : null,
                               ),
@@ -543,26 +544,26 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
                     ),
                     const SizedBox(height: 20),
 
-                    const Text('Company *', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                    const Text('Company *', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _companyController,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: AppColors.ink),
                       decoration: _inputDecoration('e.g. The First-Agency'),
                       validator: (v) => v == null || v.trim().isEmpty ? 'Company is required' : null,
                     ),
                     const SizedBox(height: 20),
 
-                    const Text('Image URL (optional)', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                    const Text('Image URL (optional)', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _imageUrlController,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: AppColors.ink),
                       decoration: _inputDecoration('e.g. https://domain.com/photo.jpg'),
                     ),
                     const SizedBox(height: 20),
 
-                    const Text('Rating', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                    const Text('Rating', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     Row(
                       children: List.generate(5, (i) {
@@ -571,7 +572,7 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
                           onPressed: () => setState(() => _rating = i + 1),
                           icon: Icon(
                             filled ? Icons.star_rounded : Icons.star_outline_rounded,
-                            color: filled ? Colors.amber : Colors.white24,
+                            color: filled ? AppColors.warning : AppColors.textTertiary,
                             size: 28,
                           ),
                         );
@@ -579,11 +580,11 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
                     ),
                     const SizedBox(height: 20),
 
-                    const Text('Opinion / Review *', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                    const Text('Opinion / Review *', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _opinionController,
-                      style: const TextStyle(color: Colors.white, height: 1.5),
+                      style: const TextStyle(color: AppColors.ink, height: 1.5),
                       maxLines: 5,
                       decoration: _inputDecoration('What did the client say about working with you?'),
                       validator: (v) => v == null || v.trim().isEmpty ? 'Opinion is required' : null,
@@ -595,14 +596,14 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
                       children: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+                          child: const Text('Cancel', style: TextStyle(color: AppColors.textTertiary)),
                         ),
                         const SizedBox(width: 16),
                         ElevatedButton(
                           onPressed: _save,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.black,
+                            foregroundColor: AppColors.onPrimary,
                             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                             textStyle: const TextStyle(fontWeight: FontWeight.bold),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
