@@ -578,6 +578,7 @@ class _ProjectFormViewState extends State<ProjectFormView> {
               inputFormatters: [LengthLimitingTextInputFormatter(80)],
               decoration: InputDecoration(
                 labelText: 'URL name (slug)',
+                floatingLabelBehavior: FloatingLabelBehavior.always,
                 hintText: ProjectSlug.fromTitle(_titleController.text),
                 hintStyle: AppFonts.monoStyle(
                     fontSize: 14, color: AppColors.textTertiary),
