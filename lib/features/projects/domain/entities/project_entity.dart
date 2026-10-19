@@ -16,6 +16,21 @@ class Project extends Equatable {
   final String? videoUrl;
   final int sortOrder;
 
+  /// Listed first on the site with a "Featured project" badge.
+  final bool featured;
+
+  /// One short headline claim shown under the title on the site.
+  final String? highlight;
+
+  /// Case study story. Each part is hidden on the site when empty.
+  final String? problem;
+  final String? role;
+  final String? outcome;
+
+  /// Case study URL name (`/projects/<slug>`). When empty the site makes one
+  /// from the title.
+  final String? slug;
+
   const Project({
     required this.id,
     required this.title,
@@ -30,6 +45,12 @@ class Project extends Equatable {
     this.iosStoreUrl,
     this.videoUrl,
     this.sortOrder = 0,
+    this.featured = false,
+    this.highlight,
+    this.problem,
+    this.role,
+    this.outcome,
+    this.slug,
   });
 
   @override
@@ -47,5 +68,11 @@ class Project extends Equatable {
         iosStoreUrl,
         videoUrl,
         sortOrder,
+        featured,
+        highlight,
+        problem,
+        role,
+        outcome,
+        slug,
       ];
 }

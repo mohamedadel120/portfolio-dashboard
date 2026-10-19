@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:admin_dashboard/core/demo/demo_mode.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_dashboard/core/constants/app_colors.dart';
+import 'package:admin_dashboard/core/widgets/app_button.dart';
+import 'package:admin_dashboard/core/widgets/page_parts.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:admin_dashboard/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:admin_dashboard/features/auth/presentation/bloc/auth_state.dart';
@@ -21,7 +24,7 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
   void initState() {
     super.initState();
     final authState = context.read<AuthCubit>().state;
-    if (authState is Authenticated) {
+    if (demoMode || authState is Authenticated) {
       final state = context.read<ProfileInfoCubit>().state;
       if (state is ProfileInfoInitial || state is ProfileInfoError) {
         context.read<ProfileInfoCubit>().fetchProfileInfo();
@@ -43,23 +46,15 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: Padding(
-          padding: const EdgeInsets.all(32.0),
+          padding: const EdgeInsets.fromLTRB(40, 36, 40, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Profile Info',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+              const PageHeader(
+                title: 'Profile info',
+                subtitle: 'The hero, about text, contact details and tech stack on the site.',
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Manage the hero/about content and tech stack shown on your portfolio.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white54),
-              ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               Expanded(
                 child: BlocConsumer<ProfileInfoCubit, ProfileInfoState>(
                   listener: (context, state) {
@@ -71,11 +66,15 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                     if (state is ProfileInfoLoading) {
                       return _buildShimmerLoading();
                     } else if (state is ProfileInfoError) {
-                      return Center(
-                        child: Text(
-                          'Error: ${state.message}',
-                          style: const TextStyle(color: Colors.red),
-                        ),
+                      return EmptyState(
+                        icon: Icons.cloud_off_rounded,
+                        title: 'Could not load profile info',
+                        message: state.message,
+                        isError: true,
+                        actionLabel: 'Retry',
+                        actionIcon: Icons.refresh_rounded,
+                        onAction: () =>
+                            context.read<ProfileInfoCubit>().fetchProfileInfo(),
                       );
                     } else if (state is ProfileInfoLoaded) {
                       return _ProfileInfoForm(profile: state.profile, isSaving: state.isSaving);
@@ -93,11 +92,11 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
 
   Widget _buildShimmerLoading() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withOpacity(0.05),
-      highlightColor: Colors.white.withOpacity(0.15),
+      baseColor: AppColors.surfaceLight,
+      highlightColor: AppColors.surface,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(16),
         ),
       ),
@@ -191,27 +190,21 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
   }
 
   InputDecoration _inputDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: Colors.white30, fontSize: 14),
-      filled: true,
-      fillColor: Colors.white.withOpacity(0.03),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
-    );
+    // Colours, borders and radius come from the app's input theme.
+    return InputDecoration(hintText: hint);
   }
 
-  Widget _label(String text) => Text(text, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600));
+  Widget _label(String text) => Text(text, style: const TextStyle(color: AppColors.ink, fontSize: 13.5, fontWeight: FontWeight.w500));
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Form(
         key: _formKey,
@@ -229,7 +222,7 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _nameController,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: AppColors.ink),
                           decoration: _inputDecoration('e.g. Mohamed Adel'),
                           validator: (v) => v == null || v.trim().isEmpty ? 'Name is required' : null,
                         ),
@@ -245,7 +238,7 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _titleController,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: AppColors.ink),
                           decoration: _inputDecoration('e.g. Flutter Developer'),
                           validator: (v) => v == null || v.trim().isEmpty ? 'Title is required' : null,
                         ),
@@ -260,7 +253,7 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _subtitleController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppColors.ink),
                 decoration: _inputDecoration('e.g. 3+ Years Experience'),
               ),
               const SizedBox(height: 20),
@@ -269,7 +262,7 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _descriptionController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppColors.ink),
                 decoration: _inputDecoration('e.g. Building Scalable Cross-Platform Mobile Applications'),
               ),
               const SizedBox(height: 20),
@@ -278,7 +271,7 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _summaryController,
-                style: const TextStyle(color: Colors.white, height: 1.5),
+                style: const TextStyle(color: AppColors.ink, height: 1.5),
                 maxLines: 5,
                 decoration: _inputDecoration('Full about-me summary shown on the site.'),
               ),
@@ -294,7 +287,7 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _emailController,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: AppColors.ink),
                           decoration: _inputDecoration('e.g. you@example.com'),
                         ),
                       ],
@@ -309,7 +302,7 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _phoneController,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: AppColors.ink),
                           decoration: _inputDecoration('e.g. +20 100 000 0000'),
                         ),
                       ],
@@ -329,7 +322,7 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _locationController,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: AppColors.ink),
                           decoration: _inputDecoration('e.g. Cairo, Egypt'),
                         ),
                       ],
@@ -344,7 +337,7 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _cvUrlController,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: AppColors.ink),
                           decoration: _inputDecoration('e.g. https://drive.google.com/...'),
                         ),
                       ],
@@ -353,7 +346,7 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
                 ],
               ),
               const SizedBox(height: 24),
-              const Divider(color: Colors.white12, height: 1),
+              const Divider(color: AppColors.border, height: 1),
               const SizedBox(height: 24),
 
               _label('Tech Stack'),
@@ -363,10 +356,13 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
                 runSpacing: 8,
                 children: _techStack.map((tech) {
                   return Chip(
-                    label: Text(tech, style: const TextStyle(color: Colors.white)),
-                    backgroundColor: AppColors.primary.withOpacity(0.12),
-                    side: BorderSide(color: AppColors.primary.withOpacity(0.3)),
-                    deleteIcon: const Icon(Icons.close_rounded, size: 16, color: Colors.white54),
+                    label: Text(tech,
+                        style: AppFonts.monoStyle(
+                            fontSize: 12.5, color: AppColors.ink)),
+                    backgroundColor: AppColors.background,
+                    side: const BorderSide(color: AppColors.border),
+                    shape: const StadiumBorder(),
+                    deleteIcon: const Icon(Icons.close_rounded, size: 16, color: AppColors.textTertiary),
                     onDeleted: () => setState(() => _techStack.remove(tech)),
                   );
                 }).toList(),
@@ -377,22 +373,17 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
                   Expanded(
                     child: TextFormField(
                       controller: _newTechController,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: AppColors.ink),
                       decoration: _inputDecoration('e.g. Flutter'),
                       onFieldSubmitted: (_) => _addTech(),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  ElevatedButton(
+                  AppButton(
+                    label: 'Add',
+                    icon: Icons.add_rounded,
+                    variant: AppButtonVariant.secondary,
                     onPressed: _addTech,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.06),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 0,
-                    ),
-                    child: const Text('Add'),
                   ),
                 ],
               ),
@@ -400,23 +391,11 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
 
               Align(
                 alignment: Alignment.centerRight,
-                child: ElevatedButton(
+                child: AppButton(
+                  label: 'Save changes',
+                  icon: Icons.check_rounded,
+                  isLoading: widget.isSaving,
                   onPressed: widget.isSaving ? null : _save,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
-                    textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 0,
-                  ),
-                  child: widget.isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                        )
-                      : const Text('Save Changes'),
                 ),
               ),
             ],

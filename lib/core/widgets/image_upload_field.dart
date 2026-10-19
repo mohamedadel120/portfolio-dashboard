@@ -1,10 +1,10 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:admin_dashboard/core/constants/app_colors.dart';
+import 'package:admin_dashboard/core/demo/demo_mode.dart';
 
 class ImageUploadField extends StatefulWidget {
   final String label;
@@ -29,6 +29,11 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
   bool _isHovering = false;
 
   Future<void> _pickAndUploadImage() async {
+    if (demoMode) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Uploads are turned off in demo mode.')));
+      return;
+    }
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
@@ -68,7 +73,7 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Upload failed: $e'),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: AppColors.danger,
           ),
         );
       }
@@ -94,9 +99,10 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.6),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white24, width: 0.5),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: IconButton(
         icon: Icon(icon, color: color, size: 20),
@@ -126,9 +132,8 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
               widget.label,
               style: const TextStyle(
                 fontSize: 14,
-                color: Colors.white70,
+                color: AppColors.ink,
                 fontWeight: FontWeight.w500,
-                letterSpacing: 0.3,
               ),
             ),
             const SizedBox(height: 12),
@@ -143,22 +148,24 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                     ? _pickAndUploadImage
                     : null,
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
+                  duration: AppMotion.of(context, AppMotion.medium),
+                  curve: AppMotion.ease,
                   height: 180,
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: _isHovering
-                        ? Colors.white.withOpacity(0.08)
-                        : Colors.white.withOpacity(0.04),
+                        ? AppColors.primarySoft
+                        : AppColors.background,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: hasImage
-                          ? AppColors.primary.withOpacity(
+                          ? AppColors.primary.withValues(alpha: 
                               _isHovering ? 0.8 : 0.5,
                             )
-                          : (_isHovering ? Colors.white38 : Colors.white12),
-                      width: hasImage ? 2 : 1,
+                          : (_isHovering
+                              ? AppColors.primary.withValues(alpha: 0.5)
+                              : AppColors.borderStrong),
+                      width: 1,
                     ),
                   ),
                   child: ClipRRect(
@@ -170,8 +177,8 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                         if (hasImage &&
                             widget.controller.text.startsWith('http'))
                           AnimatedScale(
-                            scale: _isHovering ? 1.05 : 1.0,
-                            duration: const Duration(milliseconds: 400),
+                            scale: _isHovering ? 1.02 : 1.0,
+                            duration: AppMotion.of(context, AppMotion.slow),
                             curve: Curves.easeOut,
                             child: Image.network(
                               widget.controller.text,
@@ -189,7 +196,7 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                                 gradient: LinearGradient(
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
-                                  colors: [Colors.black87, Colors.transparent],
+                                  colors: [Color(0x3316171A), Colors.transparent],
                                   stops: [0.0, 0.4],
                                 ),
                               ),
@@ -203,7 +210,7 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                             child: Text(
                               'Local asset path saved.\nPlease upload a new image.',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white54),
+                              style: TextStyle(color: AppColors.textTertiary),
                             ),
                           ),
 
@@ -217,7 +224,7 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
                                   color: _isHovering
-                                      ? AppColors.primary.withOpacity(0.15)
+                                      ? AppColors.primary.withValues(alpha: 0.15)
                                       : Colors.transparent,
                                   shape: BoxShape.circle,
                                 ),
@@ -226,7 +233,7 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                                   size: 40,
                                   color: _isHovering
                                       ? AppColors.primary
-                                      : Colors.white54,
+                                      : AppColors.textTertiary,
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -234,13 +241,13 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                                 duration: const Duration(milliseconds: 300),
                                 style: TextStyle(
                                   color: _isHovering
-                                      ? Colors.white
-                                      : Colors.white54,
+                                      ? AppColors.ink
+                                      : AppColors.textTertiary,
                                   fontWeight: _isHovering
                                       ? FontWeight.w600
                                       : FontWeight.normal,
                                 ),
-                                child: const Text('Click to browse and upload'),
+                                child: const Text('Click to choose an image'),
                               ),
                             ],
                           ),
@@ -248,7 +255,7 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                         // Uploading State
                         if (_isUploading)
                           Container(
-                            color: Colors.black87,
+                            color: AppColors.surface.withValues(alpha: 0.92),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -260,7 +267,7 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                                 Text(
                                   'Uploading... ${(_uploadProgress * 100).toStringAsFixed(0)}%',
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.ink,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.5,
                                   ),
@@ -275,20 +282,21 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
                             top: 12,
                             right: 12,
                             child: AnimatedOpacity(
-                              opacity: _isHovering ? 1.0 : 0.0,
+                                // Always visible so touch screens can use them.
+                              opacity: 1.0,
                               duration: const Duration(milliseconds: 200),
                               child: Row(
                                 children: [
                                   _buildActionButton(
                                     icon: Icons.edit_rounded,
-                                    color: Colors.white,
+                                    color: AppColors.ink,
                                     onPressed: _pickAndUploadImage,
                                     tooltip: 'Replace Image',
                                   ),
                                   const SizedBox(width: 8),
                                   _buildActionButton(
                                     icon: Icons.delete_rounded,
-                                    color: Colors.redAccent,
+                                    color: AppColors.danger,
                                     onPressed: _removeImage,
                                     tooltip: 'Remove Image',
                                   ),

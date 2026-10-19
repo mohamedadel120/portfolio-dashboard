@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:admin_dashboard/core/demo/demo_mode.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:admin_dashboard/core/constants/app_colors.dart';
+import 'package:admin_dashboard/core/widgets/page_parts.dart';
+import 'package:admin_dashboard/core/widgets/pressable.dart';
 import '../../domain/entities/analytics_entity.dart';
 import '../bloc/dashboard_cubit.dart';
 import '../bloc/dashboard_state.dart';
@@ -21,7 +24,7 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     final authState = context.read<AuthCubit>().state;
-    if (authState is Authenticated) {
+    if (demoMode || authState is Authenticated) {
       final state = context.read<DashboardCubit>().state;
       if (state is DashboardInitial || state is DashboardError) {
         context.read<DashboardCubit>().startWatchingAnalytics();
@@ -58,74 +61,37 @@ class _DashboardPageState extends State<DashboardPage> {
   // ── Shimmer ────────────────────────────────────────────────────────────────
 
   Widget _buildShimmer() {
+    Widget block(double h, {double? w, double r = 16}) => Container(
+          height: h,
+          width: w,
+          decoration: BoxDecoration(
+            color: AppColors.surfaceLight,
+            borderRadius: BorderRadius.circular(r),
+          ),
+        );
     return Shimmer.fromColors(
-      baseColor: Colors.white.withValues(alpha: 0.04),
-      highlightColor: Colors.white.withValues(alpha: 0.12),
+      baseColor: AppColors.surfaceLight,
+      highlightColor: AppColors.surface,
       child: ListView(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.fromLTRB(40, 36, 40, 40),
         children: [
-          // Header placeholder
-          Container(
-              height: 36,
-              width: 220,
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10))),
+          block(34, w: 220, r: 10),
           const SizedBox(height: 8),
-          Container(
-              height: 18,
-              width: 340,
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(6))),
+          block(18, w: 340, r: 6),
           const SizedBox(height: 32),
           Row(
             children: List.generate(
               3,
               (i) => Expanded(
-                child: Container(
-                  height: 130,
-                  margin: EdgeInsets.only(right: i < 2 ? 20 : 0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                child: Padding(
+                  padding: EdgeInsets.only(right: i < 2 ? 16 : 0),
+                  child: block(124),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          Container(
-            height: 420,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 320,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Container(
-                  height: 320,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          const SizedBox(height: 20),
+          block(420),
         ],
       ),
     );
@@ -134,51 +100,14 @@ class _DashboardPageState extends State<DashboardPage> {
   // ── Error ──────────────────────────────────────────────────────────────────
 
   Widget _buildError(String message) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              gradient: RadialGradient(colors: [
-                Colors.redAccent.withValues(alpha: 0.15),
-                Colors.transparent,
-              ]),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.cloud_off_rounded,
-                size: 32, color: Colors.redAccent),
-          ),
-          const SizedBox(height: 16),
-          const Text('Failed to load analytics',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
-          Text(message,
-              style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.38), fontSize: 13)),
-          const SizedBox(height: 24),
-          OutlinedButton.icon(
-            onPressed: () =>
-                context.read<DashboardCubit>().startWatchingAnalytics(),
-            icon: const Icon(Icons.refresh_rounded, size: 16),
-            label: const Text('Retry'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: BorderSide(
-                  color: AppColors.primary.withValues(alpha: 0.5)),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-            ),
-          ),
-        ],
-      ),
+    return EmptyState(
+      icon: Icons.cloud_off_rounded,
+      title: 'Could not load analytics',
+      message: message,
+      actionLabel: 'Retry',
+      actionIcon: Icons.refresh_rounded,
+      isError: true,
+      onAction: () => context.read<DashboardCubit>().startWatchingAnalytics(),
     );
   }
 
@@ -186,16 +115,16 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildLoaded(BuildContext context, AnalyticsEntity analytics, int period) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(32, 32, 32, 40),
+      padding: const EdgeInsets.fromLTRB(40, 36, 40, 40),
       children: [
         _buildHeader(period),
         const SizedBox(height: 28),
         _buildStatCards(analytics),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         _buildVisitsChart(analytics, period),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         _buildTopProjects(analytics),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -218,73 +147,18 @@ class _DashboardPageState extends State<DashboardPage> {
             ? 'Good afternoon'
             : 'Good evening';
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    margin: const EdgeInsets.only(right: 14),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.primary.withValues(alpha: 0.25),
-                          AppColors.primary.withValues(alpha: 0.08),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.3)),
-                    ),
-                    child: const Icon(Icons.grid_view_rounded,
-                        color: AppColors.primary, size: 20),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$greeting 👋',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.45),
-                          fontSize: 13,
-                        ),
-                      ),
-                      const Text(
-                        'Overview',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
-                          height: 1.1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        // Period toggle
+    return PageHeader(
+      title: 'Overview',
+      subtitle: '$greeting. Here is how the portfolio site is doing.',
+      actions: [
         _PeriodToggle(selectedDays: period),
-        const SizedBox(width: 12),
-        // Live indicator
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: const Color(0xFF4ADE80).withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-                color: const Color(0xFF4ADE80).withValues(alpha: 0.25)),
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: AppColors.border),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -293,17 +167,17 @@ class _DashboardPageState extends State<DashboardPage> {
                 width: 7,
                 height: 7,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF4ADE80),
+                  color: AppColors.success,
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 6),
-              const Text(
-                'Live data',
-                style: TextStyle(
-                  color: Color(0xFF4ADE80),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+              const SizedBox(width: 7),
+              Text(
+                demoMode ? 'Sample data' : 'Live data',
+                style: const TextStyle(
+                  color: AppColors.ink,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -320,30 +194,27 @@ class _DashboardPageState extends State<DashboardPage> {
       children: [
         Expanded(
           child: _StatCard(
-            title: 'Total Visits',
-            value: analytics.totalVisits.toString(),
-            icon: Icons.remove_red_eye_rounded,
-            color: AppColors.primary,
+            title: 'Total visits',
+            value: analytics.totalVisits,
+            icon: Icons.visibility_outlined,
             subtitle: 'All-time page views',
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: _StatCard(
-            title: 'Unique Visitors',
-            value: analytics.uniqueVisitors.toString(),
+            title: 'Unique visitors',
+            value: analytics.uniqueVisitors,
             icon: Icons.person_outline_rounded,
-            color: AppColors.secondary,
             subtitle: 'Distinct sessions',
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: _StatCard(
-            title: 'Total Clicks',
-            value: analytics.totalClicks.toString(),
-            icon: Icons.touch_app_rounded,
-            color: Colors.orangeAccent,
+            title: 'Total clicks',
+            value: analytics.totalClicks,
+            icon: Icons.ads_click_rounded,
             subtitle: 'Interactions tracked',
           ),
         ),
@@ -355,10 +226,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildVisitsChart(AnalyticsEntity analytics, int period) {
     return _ChartPanel(
-      title: 'Visits Overview',
+      title: 'Visits',
       subtitle: 'Last $period days',
-      icon: Icons.show_chart_rounded,
-      height: 420,
+      height: 400,
       child: _LineChartWidget(data: analytics.visitsOverTime),
     );
   }
@@ -371,9 +241,8 @@ class _DashboardPageState extends State<DashboardPage> {
         .fold(0, (a, b) => a > b ? a : b);
 
     return _ChartPanel(
-      title: 'Top Projects',
+      title: 'Top projects',
       subtitle: 'By interaction count',
-      icon: Icons.leaderboard_rounded,
       child: Column(
         children: analytics.topProjects.entries.map((e) {
           final pct = maxVal == 0 ? 0.0 : e.value / maxVal;
@@ -388,9 +257,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildPieChart(AnalyticsEntity analytics) {
     return _ChartPanel(
-      title: 'Attention Heatmap',
+      title: 'Attention',
       subtitle: 'Time spent per section',
-      icon: Icons.pie_chart_rounded,
       height: 340,
       child: _PieChartWidget(data: analytics.timeSpentPerSection),
     );
@@ -400,13 +268,23 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildBarChart(AnalyticsEntity analytics) {
     return _ChartPanel(
-      title: 'Most Interactive',
+      title: 'Most interactive',
       subtitle: 'Actions per section',
-      icon: Icons.bar_chart_rounded,
       height: 340,
       child: _BarChartWidget(data: analytics.interactionsPerSection),
     );
   }
+}
+
+/// Thousands separators: 12345 -> 12,345.
+String _formatInt(int n) {
+  final s = n.abs().toString();
+  final b = StringBuffer(n < 0 ? '-' : '');
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) b.write(',');
+    b.write(s[i]);
+  }
+  return b.toString();
 }
 
 // ── Period toggle ─────────────────────────────────────────────────────────────
@@ -420,47 +298,44 @@ class _PeriodToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 40,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: _options.map((days) {
           final active = days == selectedDays;
-          return GestureDetector(
+          return Pressable(
             onTap: () => context.read<DashboardCubit>().setPeriod(days),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            semanticLabel: 'Last $days days',
+            builder: (context, hovered) => AnimatedContainer(
+              duration: AppMotion.of(context, AppMotion.medium),
+              curve: AppMotion.ease,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              alignment: Alignment.center,
               decoration: BoxDecoration(
-                gradient: active
-                    ? LinearGradient(
-                        colors: [
-                          AppColors.primary.withValues(alpha: 0.25),
-                          AppColors.primary.withValues(alpha: 0.08),
-                        ],
-                      )
-                    : null,
-                borderRadius: BorderRadius.circular(9),
-                border: active
-                    ? Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.4))
+                color: active ? AppColors.surface : Colors.transparent,
+                borderRadius: BorderRadius.circular(999),
+                boxShadow: active
+                    ? const [
+                        BoxShadow(
+                            color: Color(0x1A16171A),
+                            blurRadius: 2,
+                            offset: Offset(0, 1)),
+                      ]
                     : null,
               ),
               child: Text(
                 '${days}d',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight:
-                      active ? FontWeight.w700 : FontWeight.w500,
-                  color: active
-                      ? AppColors.primary
-                      : Colors.white.withValues(alpha: 0.4),
-                  letterSpacing: 0.2,
+                style: AppFonts.monoStyle(
+                  fontSize: 12.5,
+                  fontWeight: active ? FontWeight.w500 : FontWeight.w400,
+                  color: active || hovered
+                      ? AppColors.ink
+                      : AppColors.textSecondary,
                 ),
               ),
             ),
@@ -473,225 +348,57 @@ class _PeriodToggle extends StatelessWidget {
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
 
-class _StatCard extends StatefulWidget {
+class _StatCard extends StatelessWidget {
   final String title;
-  final String value;
+  final int value;
   final IconData icon;
-  final Color color;
   final String subtitle;
 
   const _StatCard({
     required this.title,
     required this.value,
     required this.icon,
-    required this.color,
     required this.subtitle,
   });
 
   @override
-  State<_StatCard> createState() => _StatCardState();
-}
-
-class _StatCardState extends State<_StatCard>
-    with SingleTickerProviderStateMixin {
-  bool _hovered = false;
-  late final AnimationController _ctrl;
-  late final Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 220));
-    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) {
-        setState(() => _hovered = true);
-        _ctrl.forward();
-      },
-      onExit: (_) {
-        setState(() => _hovered = false);
-        _ctrl.reverse();
-      },
-      child: AnimatedBuilder(
-        animation: _anim,
-        builder: (context, child) => AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          transform: Matrix4.translationValues(0, _hovered ? -4 : 0, 0),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            // Gradient border outer container
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                widget.color.withValues(alpha: 0.35 + 0.25 * _anim.value),
-                Colors.white.withValues(alpha: 0.07),
-                Colors.transparent,
-              ],
-              stops: const [0.0, 0.5, 1.0],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: widget.color.withValues(alpha: 0.22 * _anim.value),
-                blurRadius: 40,
-                spreadRadius: -6,
-                offset: const Offset(0, 14),
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(
-                    alpha: _hovered ? 0.45 : 0.2),
-                blurRadius: 20,
-                spreadRadius: -8,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.all(1),
-          child: child,
-        ),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(19),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                widget.color.withValues(alpha: 0.09),
-                AppColors.background.withValues(alpha: 0.96),
-                AppColors.surface,
-              ],
-              stops: const [0.0, 0.4, 1.0],
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return SurfaceCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              // Colored top accent bar
-              Container(
-                height: 2,
-                margin: const EdgeInsets.only(bottom: 18),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      widget.color,
-                      widget.color.withValues(alpha: 0.0),
-                    ],
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(2),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.title,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.42),
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        // Large value with ShaderMask gradient on hover
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: _hovered
-                              ? ShaderMask(
-                                  shaderCallback: (bounds) =>
-                                      LinearGradient(
-                                    colors: [
-                                      widget.color,
-                                      Colors.white,
-                                    ],
-                                  ).createShader(bounds),
-                                  child: Text(
-                                    widget.value,
-                                    key: const ValueKey('colored'),
-                                    style: const TextStyle(
-                                      fontSize: 36,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
-                                      letterSpacing: -1.5,
-                                      height: 1,
-                                    ),
-                                  ),
-                                )
-                              : Text(
-                                  widget.value,
-                                  key: const ValueKey('white'),
-                                  style: const TextStyle(
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    letterSpacing: -1.5,
-                                    height: 1,
-                                  ),
-                                ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          widget.subtitle,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.white.withValues(alpha: 0.26),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  // Icon — diamond-shaped container
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          widget.color.withValues(alpha: 0.25),
-                          widget.color.withValues(alpha: 0.08),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: widget.color.withValues(alpha: 0.3),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: widget.color.withValues(
-                              alpha: 0.3 * _anim.value),
-                          blurRadius: 16,
-                        ),
-                      ],
-                    ),
-                    child: Icon(widget.icon,
-                        color: widget.color, size: 22),
-                  ),
-                ],
-              ),
+              Icon(icon, color: AppColors.textTertiary, size: 18),
             ],
           ),
-        ),
+          const SizedBox(height: 14),
+          Text(
+            _formatInt(value),
+            style: AppFonts.monoStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w500,
+              color: AppColors.ink,
+              letterSpacing: -1,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            style: const TextStyle(fontSize: 12.5, color: AppColors.textTertiary),
+          ),
+        ],
       ),
     );
   }
@@ -702,14 +409,12 @@ class _StatCardState extends State<_StatCard>
 class _ChartPanel extends StatelessWidget {
   final String title;
   final String subtitle;
-  final IconData icon;
   final Widget child;
   final double? height;
 
   const _ChartPanel({
     required this.title,
     required this.subtitle,
-    required this.icon,
     required this.child,
     this.height,
   });
@@ -718,54 +423,31 @@ class _ChartPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: height,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.02),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(9),
-                  border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.2)),
-                ),
-                child: Icon(icon, color: AppColors.primary, size: 15),
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: 0.1,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.white.withValues(alpha: 0.35),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.ink,
+              letterSpacing: -0.3,
+            ),
           ),
-          const SizedBox(height: 20),
-          Divider(color: Colors.white.withValues(alpha: 0.06), height: 1),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          ),
           const SizedBox(height: 20),
           if (height != null) Expanded(child: child) else child,
         ],
@@ -790,25 +472,27 @@ class _TopProjectRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                name,
-                style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white),
+              Expanded(
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.ink),
+                ),
               ),
               Text(
-                '$clicks interactions',
-                style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.38)),
+                _formatInt(clicks),
+                style: AppFonts.monoStyle(
+                    fontSize: 12.5, color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -817,20 +501,10 @@ class _TopProjectRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: Stack(
               children: [
-                Container(
-                  height: 6,
-                  color: Colors.white.withValues(alpha: 0.05),
-                ),
+                Container(height: 6, color: AppColors.surfaceLight),
                 FractionallySizedBox(
                   widthFactor: percentage,
-                  child: Container(
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [AppColors.secondary, AppColors.primary],
-                      ),
-                    ),
-                  ),
+                  child: Container(height: 6, color: AppColors.primary),
                 ),
               ],
             ),
@@ -862,8 +536,9 @@ class _LineChartWidget extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: 50,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: AppColors.border,
             strokeWidth: 1,
+            dashArray: const [3, 4],
           ),
         ),
         titlesData: FlTitlesData(
@@ -889,7 +564,7 @@ class _LineChartWidget extends StatelessWidget {
                     style: TextStyle(
                         color: isToday
                             ? AppColors.primary
-                            : Colors.white.withValues(alpha: 0.35),
+                            : AppColors.textTertiary,
                         fontSize: 11,
                         fontWeight: isToday
                             ? FontWeight.w600
@@ -907,7 +582,7 @@ class _LineChartWidget extends StatelessWidget {
               getTitlesWidget: (value, meta) => Text(
                 value.toInt().toString(),
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.3), fontSize: 11),
+                    color: AppColors.textTertiary, fontSize: 11),
               ),
             ),
           ),
@@ -921,7 +596,7 @@ class _LineChartWidget extends StatelessWidget {
             spots: spots,
             isCurved: true,
             color: AppColors.primary,
-            barWidth: 3,
+            barWidth: 2.5,
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: true,
@@ -930,14 +605,14 @@ class _LineChartWidget extends StatelessWidget {
                 radius: 4,
                 color: AppColors.primary,
                 strokeWidth: 2,
-                strokeColor: AppColors.background,
+                strokeColor: AppColors.surface,
               ),
             ),
             belowBarData: BarAreaData(
               show: true,
               gradient: LinearGradient(
                 colors: [
-                  AppColors.primary.withValues(alpha: 0.25),
+                  AppColors.primary.withValues(alpha: 0.14),
                   AppColors.primary.withValues(alpha: 0.0),
                 ],
                 begin: Alignment.topCenter,
@@ -948,7 +623,7 @@ class _LineChartWidget extends StatelessWidget {
         ],
         lineTouchData: LineTouchData(
           touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (spot) => AppColors.surfaceLight,
+            getTooltipColor: (spot) => AppColors.ink,
             getTooltipItems: (spots) => spots
                 .map((s) => LineTooltipItem(
                       '${s.y.toInt()} visits',
@@ -971,13 +646,15 @@ class _PieChartWidget extends StatelessWidget {
   final Map<String, int> data;
   const _PieChartWidget({required this.data});
 
+  // One hue (the brand teal) in steps, then warm neutrals: readable on
+  // white without adding new accent colours.
   static const _colors = [
-    AppColors.primary,
-    AppColors.secondary,
-    Colors.orangeAccent,
-    Colors.pinkAccent,
-    Colors.greenAccent,
-    Colors.purpleAccent,
+    Color(0xFF155E75),
+    Color(0xFF3F8AA0),
+    Color(0xFF8DBFCC),
+    Color(0xFF4A4B50),
+    Color(0xFFA19D92),
+    Color(0xFFD3CFC4),
   ];
 
   @override
@@ -986,7 +663,7 @@ class _PieChartWidget extends StatelessWidget {
       return Center(
         child: Text('No data yet',
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.35), fontSize: 14)),
+                color: AppColors.textTertiary, fontSize: 14)),
       );
     }
 
@@ -1000,8 +677,12 @@ class _PieChartWidget extends StatelessWidget {
         value: e.value.toDouble(),
         title: '${pct.toStringAsFixed(0)}%',
         radius: 56,
-        titleStyle: const TextStyle(
-            fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+        titleStyle: AppFonts.monoStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: color.computeLuminance() > 0.4
+                ? AppColors.ink
+                : Colors.white),
         badgeWidget: _PieBadge(label: e.key, color: color),
         badgePositionPercentageOffset: 1.45,
       );
@@ -1030,12 +711,12 @@ class _PieBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Text(label,
-          style: const TextStyle(fontSize: 10, color: Colors.white70)),
+          style: const TextStyle(fontSize: 11, color: AppColors.ink)),
     );
   }
 }
@@ -1052,7 +733,7 @@ class _BarChartWidget extends StatelessWidget {
       return Center(
         child: Text('No data yet',
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.35), fontSize: 14)),
+                color: AppColors.textTertiary, fontSize: 14)),
       );
     }
 
@@ -1064,11 +745,7 @@ class _BarChartWidget extends StatelessWidget {
         barRods: [
           BarChartRodData(
             toY: e.value.toDouble(),
-            gradient: const LinearGradient(
-              colors: [AppColors.secondary, AppColors.primary],
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-            ),
+            color: AppColors.primary,
             width: 20,
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(6),
@@ -1087,13 +764,13 @@ class _BarChartWidget extends StatelessWidget {
         maxY: maxVal.toDouble() * 1.25,
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
-            getTooltipColor: (group) => AppColors.surfaceLight,
+            getTooltipColor: (group) => AppColors.ink,
             getTooltipItem: (group, gi, rod, ri) => BarTooltipItem(
               '${rod.toY.toInt()} actions',
               const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13),
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13),
             ),
           ),
         ),
@@ -1109,9 +786,9 @@ class _BarChartWidget extends StatelessWidget {
                   child: Text(
                     data.keys.elementAt(idx),
                     style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600),
+                        color: AppColors.textTertiary,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500),
                   ),
                 );
               },
@@ -1130,8 +807,9 @@ class _BarChartWidget extends StatelessWidget {
           horizontalInterval:
               maxVal > 0 ? (maxVal / 4).ceilToDouble() : 1,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: AppColors.border,
             strokeWidth: 1,
+            dashArray: const [3, 4],
           ),
         ),
         borderData: FlBorderData(show: false),

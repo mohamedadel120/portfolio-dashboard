@@ -1,4 +1,8 @@
 import 'package:admin_dashboard/features/dashboard/data/repositories/firestore_analytics_repository.dart';
+import 'package:admin_dashboard/features/dashboard/data/repositories/mock_analytics_repository.dart';
+import 'package:admin_dashboard/features/projects/data/datasources/mock_projects_remote_data_source.dart';
+import '../demo/demo_data_sources.dart';
+import '../demo/demo_mode.dart';
 import 'package:admin_dashboard/features/dashboard/presentation/bloc/dashboard_cubit.dart';
 import 'package:get_it/get_it.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -27,7 +31,9 @@ Future<void> init() async {
   // Features - Dashboard
   sl.registerFactory(() => DashboardCubit(sl()));
   sl.registerLazySingleton<AnalyticsRepository>(
-    () => FirestoreAnalyticsRepository(firestore: sl()),
+    () => demoMode
+        ? MockAnalyticsRepository()
+        : FirestoreAnalyticsRepository(firestore: sl()),
   );
 
   // Features - Projects
@@ -38,7 +44,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ProjectsRepository(remoteDataSource: sl()));
 
   // Data sources
-  sl.registerLazySingleton(() => ProjectsRemoteDataSource(firestore: sl()));
+  sl.registerLazySingleton<ProjectsRemoteDataSource>(() => demoMode
+      ? MockProjectsRemoteDataSource()
+      : ProjectsRemoteDataSource(firestore: sl()));
 
   // Features - Expertise
   // Bloc
@@ -48,7 +56,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ExpertiseRepository(remoteDataSource: sl()));
 
   // Data sources
-  sl.registerLazySingleton(() => ExpertiseRemoteDataSource(firestore: sl()));
+  sl.registerLazySingleton<ExpertiseRemoteDataSource>(() => demoMode
+      ? DemoExpertiseDataSource()
+      : ExpertiseRemoteDataSource(firestore: sl()));
 
   // Features - Experience
   // Bloc
@@ -58,7 +68,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ExperienceRepository(remoteDataSource: sl()));
 
   // Data sources
-  sl.registerLazySingleton(() => ExperienceRemoteDataSource(firestore: sl()));
+  sl.registerLazySingleton<ExperienceRemoteDataSource>(() => demoMode
+      ? DemoExperienceDataSource()
+      : ExperienceRemoteDataSource(firestore: sl()));
 
   // Features - Testimonials
   // Bloc
@@ -68,7 +80,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => TestimonialsRepository(remoteDataSource: sl()));
 
   // Data sources
-  sl.registerLazySingleton(() => TestimonialsRemoteDataSource(firestore: sl()));
+  sl.registerLazySingleton<TestimonialsRemoteDataSource>(() => demoMode
+      ? DemoTestimonialsDataSource()
+      : TestimonialsRemoteDataSource(firestore: sl()));
 
   // Features - Why Choose Me
   // Bloc
@@ -78,7 +92,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => WhyChooseMeRepository(remoteDataSource: sl()));
 
   // Data sources
-  sl.registerLazySingleton(() => WhyChooseMeRemoteDataSource(firestore: sl()));
+  sl.registerLazySingleton<WhyChooseMeRemoteDataSource>(() => demoMode
+      ? DemoWhyChooseMeDataSource()
+      : WhyChooseMeRemoteDataSource(firestore: sl()));
 
   // Features - Profile Info
   // Bloc
@@ -88,8 +104,10 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ProfileInfoRepository(remoteDataSource: sl()));
 
   // Data sources
-  sl.registerLazySingleton(() => ProfileInfoRemoteDataSource(firestore: sl()));
+  sl.registerLazySingleton<ProfileInfoRemoteDataSource>(() => demoMode
+      ? DemoProfileInfoDataSource()
+      : ProfileInfoRemoteDataSource(firestore: sl()));
 
-  // External
+  // External (never resolved in demo mode, where Firebase is not initialised)
   sl.registerLazySingleton(() => FirebaseFirestore.instance);
 }

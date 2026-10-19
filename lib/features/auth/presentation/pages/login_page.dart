@@ -24,8 +24,23 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     super.initState();
     _entrance = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..forward();
+      duration: const Duration(milliseconds: 700),
+    );
+  }
+
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    // Reduced motion: show everything in place, no entrance.
+    if (AppMotion.reduced(context)) {
+      _entrance.value = 1;
+    } else {
+      _entrance.forward();
+    }
   }
 
   @override

@@ -16,6 +16,12 @@ class ProjectModel extends Project {
     super.iosStoreUrl,
     super.videoUrl,
     super.sortOrder = 0,
+    super.featured = false,
+    super.highlight,
+    super.problem,
+    super.role,
+    super.outcome,
+    super.slug,
   });
 
   factory ProjectModel.fromEntity(Project entity) => ProjectModel(
@@ -32,6 +38,12 @@ class ProjectModel extends Project {
         iosStoreUrl: entity.iosStoreUrl,
         videoUrl: entity.videoUrl,
         sortOrder: entity.sortOrder,
+        featured: entity.featured,
+        highlight: entity.highlight,
+        problem: entity.problem,
+        role: entity.role,
+        outcome: entity.outcome,
+        slug: entity.slug,
       );
 
   factory ProjectModel.fromJson(Map<String, dynamic> json, String id) {
@@ -40,7 +52,7 @@ class ProjectModel extends Project {
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       tech: List<String>.from(json['tech'] ?? []),
-      color: Color(json['color'] ?? 0xFF000000),
+      color: Color(parseColorValue(json['color'])),
       downloads: json['downloads'] ?? '',
       imageUrl: json['imageUrl'],
       logoUrl: json['logoUrl'],
@@ -51,9 +63,17 @@ class ProjectModel extends Project {
       iosStoreUrl: json['iosStoreUrl'],
       videoUrl: json['videoUrl'],
       sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
+      featured: parseFlag(json['featured']),
+      highlight: nonBlank(json['highlight']),
+      problem: nonBlank(json['problem']),
+      role: nonBlank(json['role']),
+      outcome: nonBlank(json['outcome']),
+      slug: nonBlank(json['slug']),
     );
   }
 
+  /// Blank optional text is written as null so the site treats it as absent
+  /// (and an `update()` clears a value the owner emptied).
   Map<String, dynamic> toJson() {
     return {
       'title': title,
@@ -68,6 +88,40 @@ class ProjectModel extends Project {
       'iosStoreUrl': iosStoreUrl,
       'videoUrl': videoUrl,
       'sortOrder': sortOrder,
+      'featured': featured,
+      'highlight': nonBlank(highlight),
+      'problem': nonBlank(problem),
+      'role': nonBlank(role),
+      'outcome': nonBlank(outcome),
+      'slug': nonBlank(slug),
     };
+  }
+
+  /// Trimmed text, or null when [value] is not a string or is blank.
+  static String? nonBlank(Object? value) {
+    if (value is! String) return null;
+    final text = value.trim();
+    return text.isEmpty ? null : text;
+  }
+
+  /// A real boolean or the strings "true" / "false" (as the site accepts).
+  static bool parseFlag(Object? raw) => switch (raw) {
+        bool b => b,
+        String s => s.trim().toLowerCase() == 'true',
+        _ => false,
+      };
+
+  /// Accepts an int, `"0xFF00D9FF"`, or a decimal string, like the site.
+  static int parseColorValue(Object? raw) {
+    const fallback = 0xFF000000;
+    if (raw is int) return raw;
+    if (raw is String) {
+      final text = raw.trim();
+      if (text.startsWith('0x') || text.startsWith('0X')) {
+        return int.tryParse(text.substring(2), radix: 16) ?? fallback;
+      }
+      return int.tryParse(text) ?? fallback;
+    }
+    return fallback;
   }
 }

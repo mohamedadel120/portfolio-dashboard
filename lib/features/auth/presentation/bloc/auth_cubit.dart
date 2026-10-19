@@ -3,7 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
-  final FirebaseAuth _firebaseAuth;
+  /// Null only in demo mode, where Firebase is never initialised.
+  final FirebaseAuth? _firebaseAuth;
 
   AuthCubit({FirebaseAuth? firebaseAuth})
       : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
@@ -13,8 +14,16 @@ class AuthCubit extends Cubit<AuthState> {
     _init();
   }
 
+  /// Demo mode: no Firebase, nobody signed in, and sign-in is refused so no
+  /// real credentials are ever sent from a demo build.
+  AuthCubit.demo()
+      : _firebaseAuth = null,
+        super(Unauthenticated());
+
+  bool get isDemo => _firebaseAuth == null;
+
   void _init() {
-    _firebaseAuth.authStateChanges().listen((User? user) {
+    _firebaseAuth?.authStateChanges().listen((User? user) {
       if (user != null) {
         emit(Authenticated(user));
       } else {
@@ -24,9 +33,15 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> loginWithEmailAndPassword(String email, String password) async {
+    final auth = _firebaseAuth;
+    if (auth == null) {
+      emit(const AuthError('Sign-in is turned off in demo mode.'));
+      emit(Unauthenticated());
+      return;
+    }
     emit(AuthLoading());
     try {
-      await _firebaseAuth.signInWithEmailAndPassword(
+      await auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -41,6 +56,6 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> logout() async {
-    await _firebaseAuth.signOut();
+    await _firebaseAuth?.signOut();
   }
 }
