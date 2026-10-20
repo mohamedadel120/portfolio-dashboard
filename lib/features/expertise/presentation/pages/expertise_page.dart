@@ -403,7 +403,7 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
   final List<String> _categoryPresets = ['Mobile', 'Frontend', 'Backend', 'DevOps', 'Design', 'Other'];
   
   final List<Color> _colorPresets = [
-    const Color(0xFF155E75), // Teal
+    const Color(0xFF0E7490), // Teal
     const Color(0xFF4CAF50), // Green
     const Color(0xFFFF9800), // Orange
     const Color(0xFFE91E63), // Pink
@@ -421,7 +421,7 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
 
     String hexColor = widget.skill != null
         ? widget.skill!.color.value.toRadixString(16).substring(2).toUpperCase()
-        : '155E75';
+        : '0E7490';
     _colorController = TextEditingController(text: hexColor);
   }
 
@@ -601,7 +601,7 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
                             decoration: InputDecoration(
                               prefixText: '# ',
                               prefixStyle: const TextStyle(color: AppColors.textTertiary),
-                              hintText: '155E75',
+                              hintText: '0E7490',
                             ),
                             validator: (v) {
                               if (v == null || v.trim().isEmpty) return 'Color is required';

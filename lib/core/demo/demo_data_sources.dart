@@ -73,7 +73,7 @@ class DemoExpertiseDataSource implements ExpertiseRemoteDataSource {
         title: 'Flutter',
         category: 'Mobile',
         percentage: 95,
-        color: Color(0xFF155E75)),
+        color: Color(0xFF0E7490)),
     const ExpertiseModel(
         id: 'demo-sk-2',
         title: 'Dart',
@@ -158,7 +158,7 @@ class DemoWhyChooseMeDataSource implements WhyChooseMeRemoteDataSource {
       id: 'demo-w-1',
       title: 'Clean architecture',
       description: 'Demo text. Code that is easy to test and to change.',
-      color: const Color(0xFF155E75),
+      color: const Color(0xFF0E7490),
       icon: Icons.architecture_rounded.codePoint,
     ),
     WhyChooseMeModel(

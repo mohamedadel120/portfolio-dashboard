@@ -18,7 +18,7 @@ import '../widgets/project_badges.dart';
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const _kPresetColors = [
-  Color(0xFF155E75), // teal
+  Color(0xFF0E7490), // teal
   Color(0xFF2563EB), // blue
   Color(0xFF6366F1), // indigo
   Color(0xFF7C3AED), // violet
@@ -78,7 +78,7 @@ class _ProjectFormViewState extends State<ProjectFormView> {
     _techController = TextEditingController(text: p?.tech.join(', ') ?? '');
     _downloadsController = TextEditingController(text: p?.downloads ?? '');
 
-    final hex = p != null ? _colorToHex(p.color) : '155E75';
+    final hex = p != null ? _colorToHex(p.color) : '0E7490';
     _colorController = TextEditingController(text: hex);
     _previewColor = _parseHex(hex) ?? AppColors.primary;
 
@@ -924,7 +924,7 @@ class _ProjectFormViewState extends State<ProjectFormView> {
       ),
       validator: (v) {
         if (v == null || v.trim().isEmpty) return null;
-        if (_parseHex(v) == null) return 'Use 6 hex characters, e.g. 155E75';
+        if (_parseHex(v) == null) return 'Use 6 hex characters, e.g. 0E7490';
         return null;
       },
     );

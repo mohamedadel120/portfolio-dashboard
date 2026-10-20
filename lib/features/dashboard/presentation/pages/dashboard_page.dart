@@ -649,7 +649,7 @@ class _PieChartWidget extends StatelessWidget {
   // One hue (the brand teal) in steps, then warm neutrals: readable on
   // white without adding new accent colours.
   static const _colors = [
-    Color(0xFF155E75),
+    Color(0xFF0E7490),
     Color(0xFF3F8AA0),
     Color(0xFF8DBFCC),
     Color(0xFF4A4B50),
