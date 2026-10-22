@@ -47,7 +47,7 @@ class _ExperiencePageState extends State<ExperiencePage> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: Padding(
-          padding: const EdgeInsets.fromLTRB(40, 36, 40, 24),
+          padding: pagePadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

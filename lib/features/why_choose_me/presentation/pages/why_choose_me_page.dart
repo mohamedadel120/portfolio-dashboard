@@ -79,7 +79,7 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: Padding(
-          padding: const EdgeInsets.fromLTRB(40, 36, 40, 24),
+          padding: pagePadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -123,11 +123,7 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
                         ),
                         child: GridView.builder(
                           padding: const EdgeInsets.all(24),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 20,
-                            mainAxisSpacing: 20,
-                            childAspectRatio: 1.6,
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400, crossAxisSpacing: 20, mainAxisSpacing: 20, mainAxisExtent: 225,
                           ),
                           itemCount: state.items.length,
                           itemBuilder: (context, index) {
@@ -243,11 +239,7 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
       highlightColor: AppColors.surface,
       child: GridView.builder(
         padding: const EdgeInsets.all(24),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 20,
-          mainAxisSpacing: 20,
-          childAspectRatio: 1.6,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400, crossAxisSpacing: 20, mainAxisSpacing: 20, mainAxisExtent: 225,
         ),
         itemCount: 6,
         itemBuilder: (context, index) {

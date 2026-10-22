@@ -107,7 +107,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: Padding(
-          padding: const EdgeInsets.fromLTRB(40, 36, 40, 24),
+          padding: pagePadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -149,6 +149,44 @@ class _ProjectsPageState extends State<ProjectsPage> {
             .where((p) => p.androidStoreUrl != null || p.iosStoreUrl != null)
             .length;
         final featuredCount = projects.where((p) => p.featured).length;
+        final search = SearchField(
+          controller: _searchController,
+          hint: 'Search projects',
+          query: _searchQuery,
+          onChanged: (v) => setState(() => _searchQuery = v),
+          onClear: () {
+            _searchController.clear();
+            setState(() => _searchQuery = '');
+          },
+        );
+
+        // On a phone the counts wrap and the search takes its own full row.
+        if (MediaQuery.sizeOf(context).width < 700) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (projects.isNotEmpty) ...[
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    StatChip(
+                      icon: Icons.folder_outlined,
+                      count: '${projects.length}',
+                      label: projects.length == 1 ? 'project' : 'projects',
+                    ),
+                    if (liveCount > 0)
+                      StatChip(icon: Icons.storefront_outlined, count: '$liveCount', label: 'live', color: AppColors.success),
+                    if (featuredCount > 0)
+                      StatChip(icon: Icons.star_rounded, count: '$featuredCount', label: 'featured', color: AppColors.primary),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
+              search,
+            ],
+          );
+        }
 
         return Row(
           children: [
@@ -184,16 +222,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
                 alignment: Alignment.centerRight,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 360),
-                  child: SearchField(
-                    controller: _searchController,
-                    hint: 'Search projects',
-                    query: _searchQuery,
-                    onChanged: (v) => setState(() => _searchQuery = v),
-                    onClear: () {
-                      _searchController.clear();
-                      setState(() => _searchQuery = '');
-                    },
-                  ),
+                  child: search,
                 ),
               ),
             ),
@@ -281,11 +310,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
       highlightColor: AppColors.surface,
       child: _isGridView
           ? GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 18,
-                mainAxisSpacing: 18,
-                childAspectRatio: 0.82,
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400, crossAxisSpacing: 18, mainAxisSpacing: 18, mainAxisExtent: 463,
               ),
               itemCount: 6,
               itemBuilder: (context, index) => Container(
@@ -328,34 +353,26 @@ class _GridView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        int columns = 2;
-        if (constraints.maxWidth > 1300) {
-          columns = 4;
-        } else if (constraints.maxWidth > 860) {
-          columns = 3;
-        }
-        return GridView.builder(
-          padding: const EdgeInsets.only(bottom: 24),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            crossAxisSpacing: 18,
-            mainAxisSpacing: 18,
-            childAspectRatio: 0.78,
-          ),
-          itemCount: projects.length,
-          itemBuilder: (context, i) {
-            final p = projects[i];
-            final url = urls[p.id];
-            return ProjectGridItem(
-              key: ValueKey(p.id),
-              project: p,
-              onEdit: () => onEdit(p),
-              onDelete: () => onDelete(p),
-              onOpenCaseStudy: url == null ? null : () => openInNewTab(url),
-            );
-          },
+    // Columns follow the width (cards at most 400 px wide); every card keeps
+    // the same height, so nothing inside it can overlap on a narrow screen.
+    return GridView.builder(
+      padding: const EdgeInsets.only(bottom: 24),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 400,
+        crossAxisSpacing: 18,
+        mainAxisSpacing: 18,
+        mainAxisExtent: 463,
+      ),
+      itemCount: projects.length,
+      itemBuilder: (context, i) {
+        final p = projects[i];
+        final url = urls[p.id];
+        return ProjectGridItem(
+          key: ValueKey(p.id),
+          project: p,
+          onEdit: () => onEdit(p),
+          onDelete: () => onDelete(p),
+          onOpenCaseStudy: url == null ? null : () => openInNewTab(url),
         );
       },
     );

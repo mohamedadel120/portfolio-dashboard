@@ -14,9 +14,51 @@ class DashboardLayout extends StatelessWidget {
 
   const DashboardLayout({super.key, required this.child});
 
+  /// Below this width the sidebar would leave too little room for the
+  /// content (at 390 px the page titles broke one letter per line), so it
+  /// becomes a drawer opened from a slim top bar.
+  static const compactBreakpoint = 1000.0;
+
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
+    final compact = MediaQuery.sizeOf(context).width < compactBreakpoint;
+
+    if (compact) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.surface,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          shape: const Border(bottom: BorderSide(color: AppColors.border)),
+          iconTheme: const IconThemeData(color: AppColors.ink),
+          titleSpacing: 4,
+          title: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: SizedBox(width: 28, height: 28, child: Image.asset('assets/images/logo.png')),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Portfolio Admin',
+                style: TextStyle(color: AppColors.ink, fontWeight: FontWeight.w600, fontSize: 15, letterSpacing: -0.2),
+              ),
+              if (demoMode) ...[const SizedBox(width: 10), const _DemoBadge()],
+            ],
+          ),
+        ),
+        drawer: Drawer(
+          width: 280,
+          backgroundColor: AppColors.surface,
+          shape: const RoundedRectangleBorder(),
+          child: SafeArea(child: _Sidebar(location: location, inDrawer: true)),
+        ),
+        body: child,
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -35,7 +77,12 @@ class DashboardLayout extends StatelessWidget {
 
 class _Sidebar extends StatelessWidget {
   final String location;
-  const _Sidebar({required this.location});
+
+  /// Shown inside the compact layout's drawer: fills the drawer's width and
+  /// closes the drawer when a page is chosen.
+  final bool inDrawer;
+
+  const _Sidebar({required this.location, this.inDrawer = false});
 
   static const _navItems = [
     _NavItem(icon: Icons.grid_view_rounded,       label: 'Dashboard',     route: '/'),
@@ -50,7 +97,7 @@ class _Sidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 240,
+      width: inDrawer ? null : 240,
       color: AppColors.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -136,7 +183,10 @@ class _Sidebar extends StatelessWidget {
             return _SidebarItem(
               item: item,
               isSelected: isSelected,
-              onTap: () => context.go(item.route),
+              onTap: () {
+                if (inDrawer) Navigator.of(context).pop();
+                context.go(item.route);
+              },
             );
           }),
         ],

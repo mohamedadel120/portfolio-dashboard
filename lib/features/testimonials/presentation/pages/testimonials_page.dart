@@ -47,7 +47,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: Padding(
-          padding: const EdgeInsets.fromLTRB(40, 36, 40, 24),
+          padding: pagePadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -91,11 +91,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                         ),
                         child: GridView.builder(
                           padding: const EdgeInsets.all(24),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 20,
-                            mainAxisSpacing: 20,
-                            childAspectRatio: 1.05,
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400, crossAxisSpacing: 20, mainAxisSpacing: 20, mainAxisExtent: 343,
                           ),
                           itemCount: state.testimonials.length,
                           itemBuilder: (context, index) {
@@ -229,11 +225,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
       highlightColor: AppColors.surface,
       child: GridView.builder(
         padding: const EdgeInsets.all(24),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 20,
-          mainAxisSpacing: 20,
-          childAspectRatio: 1.05,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400, crossAxisSpacing: 20, mainAxisSpacing: 20, mainAxisExtent: 343,
         ),
         itemCount: 6,
         itemBuilder: (context, index) {

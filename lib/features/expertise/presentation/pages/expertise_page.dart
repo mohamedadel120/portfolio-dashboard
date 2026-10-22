@@ -49,7 +49,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: Padding(
-          padding: const EdgeInsets.fromLTRB(40, 36, 40, 24),
+          padding: pagePadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -146,11 +146,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
                               ),
                               child: GridView.builder(
                                 padding: const EdgeInsets.all(24),
-                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 3,
-                                  crossAxisSpacing: 24,
-                                  mainAxisSpacing: 24,
-                                  childAspectRatio: 2.2,
+                                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400, crossAxisSpacing: 24, mainAxisSpacing: 24, mainAxisExtent: 162,
                                 ),
                                 itemCount: filteredSkills.length,
                                 itemBuilder: (context, index) {
@@ -298,11 +294,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
       highlightColor: AppColors.surface,
       child: GridView.builder(
         padding: const EdgeInsets.all(24),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 24,
-          mainAxisSpacing: 24,
-          childAspectRatio: 2.2,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400, crossAxisSpacing: 24, mainAxisSpacing: 24, mainAxisExtent: 162,
         ),
         itemCount: 6,
         itemBuilder: (context, index) {

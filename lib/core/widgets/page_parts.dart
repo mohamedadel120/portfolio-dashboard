@@ -18,39 +18,56 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final heading = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.ink,
+            fontSize: 28,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.8,
+            height: 1.15,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14.5,
+            height: 1.4,
+          ),
+        ),
+      ],
+    );
+    final actionRow = [
+      for (final (i, a) in actions.indexed) ...[
+        if (i > 0) const SizedBox(width: 10),
+        a,
+      ],
+    ];
+
+    // On a phone the actions go under the title instead of squeezing it.
+    if (MediaQuery.sizeOf(context).width < 700) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          heading,
+          if (actions.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Row(children: actionRow),
+          ],
+        ],
+      );
+    }
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: AppColors.ink,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.8,
-                  height: 1.15,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14.5,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-        for (final (i, a) in actions.indexed) ...[
-          if (i > 0) const SizedBox(width: 10),
-          a,
-        ],
+        Expanded(child: heading),
+        ...actionRow,
       ],
     );
   }
@@ -439,6 +456,15 @@ class _HoverBuilderState extends State<HoverBuilder> {
       child: widget.builder(context, _hovered),
     );
   }
+}
+
+/// The padding around a page's content: roomy on a desktop, tighter on a
+/// tablet, and phone-sized on a phone, so content keeps most of the width.
+EdgeInsets pagePadding(BuildContext context) {
+  final width = MediaQuery.sizeOf(context).width;
+  if (width < 700) return const EdgeInsets.fromLTRB(16, 20, 16, 16);
+  if (width < 1000) return const EdgeInsets.fromLTRB(24, 28, 24, 20);
+  return const EdgeInsets.fromLTRB(40, 36, 40, 24);
 }
 
 /// Shows a confirm dialog for a destructive action. Returns true when the
