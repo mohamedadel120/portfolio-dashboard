@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_dashboard/core/constants/app_colors.dart';
 import 'package:admin_dashboard/core/widgets/app_button.dart';
 import 'package:admin_dashboard/core/widgets/page_parts.dart';
+import 'package:admin_dashboard/core/widgets/unsaved_changes.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:admin_dashboard/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:admin_dashboard/features/auth/presentation/bloc/auth_state.dart';
@@ -14,6 +15,10 @@ import '../../data/models/profile_info_model.dart';
 
 class ProfileInfoPage extends StatefulWidget {
   const ProfileInfoPage({super.key});
+
+  /// True while the form holds edits that are not saved; the router reads it
+  /// before leaving the page (see app_router.dart, onExit).
+  static final unsavedChanges = ValueNotifier<bool>(false);
 
   @override
   State<ProfileInfoPage> createState() => _ProfileInfoPageState();
@@ -142,7 +147,18 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
     _cvUrlController = TextEditingController(text: widget.profile.cvUrl);
     _newTechController = TextEditingController();
     _techStack = List<String>.from(widget.profile.techStack);
+    _saved = _snapshot();
   }
+
+  /// The values as last saved (or loaded), to tell whether there are edits.
+  late String _saved;
+
+  String _snapshot() => formSnapshot([
+        _nameController, _titleController, _subtitleController, _descriptionController, _summaryController,
+        _emailController, _phoneController, _locationController, _cvUrlController, _techStack,
+      ]);
+
+  bool get _dirty => _snapshot() != _saved;
 
   @override
   void dispose() {
@@ -156,6 +172,7 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
     _locationController.dispose();
     _cvUrlController.dispose();
     _newTechController.dispose();
+    ProfileInfoPage.unsavedChanges.value = false;
     super.dispose();
   }
 
@@ -183,6 +200,7 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
         techStack: _techStack,
       );
       context.read<ProfileInfoCubit>().updateProfileInfo(updated);
+      setState(() => _saved = _snapshot());
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile info saved')),
       );
@@ -198,6 +216,8 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
 
   @override
   Widget build(BuildContext context) {
+    final dirty = _dirty;
+    ProfileInfoPage.unsavedChanges.value = dirty;
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
@@ -208,7 +228,40 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
       ),
       child: Form(
         key: _formKey,
-        child: SingleChildScrollView(
+        // Rebuild on every edit so the footer can say "Unsaved changes".
+        onChanged: () => setState(() {}),
+        child: Column(
+          children: [
+            Expanded(child: _fields()),
+            const SizedBox(height: 20),
+            const Divider(color: AppColors.border, height: 1),
+            const SizedBox(height: 16),
+            // Always visible, however long the form scrolls.
+            Row(
+              children: [
+                if (dirty) ...[
+                  const Icon(Icons.circle, size: 8, color: AppColors.warning),
+                  const SizedBox(width: 8),
+                  const Text('Unsaved changes', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.5)),
+                ] else
+                  const Text('All changes saved', style: TextStyle(color: AppColors.textTertiary, fontSize: 13.5)),
+                const Spacer(),
+                AppButton(
+                  label: 'Save changes',
+                  icon: Icons.check_rounded,
+                  isLoading: widget.isSaving,
+                  onPressed: widget.isSaving || !dirty ? null : _save,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _fields() {
+    return SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -387,21 +440,8 @@ class _ProfileInfoFormState extends State<_ProfileInfoForm> {
                   ),
                 ],
               ),
-              const SizedBox(height: 32),
-
-              Align(
-                alignment: Alignment.centerRight,
-                child: AppButton(
-                  label: 'Save changes',
-                  icon: Icons.check_rounded,
-                  isLoading: widget.isSaving,
-                  onPressed: widget.isSaving ? null : _save,
-                ),
-              ),
             ],
           ),
-        ),
-      ),
-    );
+        );
   }
 }

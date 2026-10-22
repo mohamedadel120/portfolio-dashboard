@@ -8,6 +8,7 @@ import 'package:admin_dashboard/core/widgets/image_upload_field.dart';
 import 'package:admin_dashboard/core/widgets/multiple_image_upload_field.dart';
 import 'package:admin_dashboard/core/widgets/page_parts.dart';
 import 'package:admin_dashboard/core/widgets/pressable.dart';
+import 'package:admin_dashboard/core/widgets/unsaved_changes.dart';
 
 import '../../domain/entities/project_entity.dart';
 import '../../domain/project_slug.dart';
@@ -97,7 +98,18 @@ class _ProjectFormViewState extends State<ProjectFormView> {
     _galleryNotifier = ValueNotifier<List<String>>(
       p?.galleryImages != null ? List.from(p!.galleryImages!) : [],
     );
+    _initialSnapshot = _snapshot();
   }
+
+  /// Everything the form edits, to tell whether it has unsaved changes.
+  late final String _initialSnapshot;
+
+  String _snapshot() => formSnapshot([
+        _titleController, _descController, _techController, _downloadsController,
+        _colorController, _imageUrlController, _logoUrlController, _androidUrlController,
+        _iosUrlController, _videoUrlController, _highlightController, _problemController,
+        _roleController, _outcomeController, _slugController, _featured, _galleryNotifier.value,
+      ]);
 
   @override
   void dispose() {
@@ -268,7 +280,9 @@ class _ProjectFormViewState extends State<ProjectFormView> {
         }
       },
       builder: (context, state) {
-        return Container(
+        return UnsavedChangesGuard(
+          isDirty: () => !_isSaving && _snapshot() != _initialSnapshot,
+          child: Container(
           width: dialogWidth,
           constraints: BoxConstraints(maxHeight: size.height * 0.92),
           decoration: BoxDecoration(
@@ -295,6 +309,7 @@ class _ProjectFormViewState extends State<ProjectFormView> {
                 _buildFooter(),
               ],
             ),
+          ),
           ),
         );
       },
@@ -341,7 +356,7 @@ class _ProjectFormViewState extends State<ProjectFormView> {
             icon: Icons.close_rounded,
             tooltip: 'Close',
             size: 36,
-            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+            onPressed: _isSaving ? null : () => Navigator.of(context).maybePop(),
           ),
         ],
       ),
@@ -831,7 +846,7 @@ class _ProjectFormViewState extends State<ProjectFormView> {
           AppButton(
             label: 'Cancel',
             variant: AppButtonVariant.ghost,
-            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+            onPressed: _isSaving ? null : () => Navigator.of(context).maybePop(),
           ),
           const SizedBox(width: 8),
           AppButton(

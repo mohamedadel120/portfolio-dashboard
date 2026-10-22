@@ -1,5 +1,6 @@
 import 'package:admin_dashboard/core/demo/demo_mode.dart';
 import 'package:flutter/material.dart';
+import 'package:admin_dashboard/core/widgets/unsaved_changes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_dashboard/core/constants/app_colors.dart';
 import 'package:admin_dashboard/core/widgets/app_button.dart';
@@ -342,7 +343,13 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
     _opinionController = TextEditingController(text: widget.testimonial?.opinion ?? '');
     _imageUrlController = TextEditingController(text: widget.testimonial?.imageUrl ?? '');
     _rating = widget.testimonial?.rating ?? 5;
+    _initialSnapshot = _snapshot();
   }
+
+  /// Everything the form edits, to tell whether it has unsaved changes.
+  late final String _initialSnapshot;
+
+  String _snapshot() => formSnapshot([_nameController, _roleController, _companyController, _opinionController, _imageUrlController, _rating]);
 
   @override
   void dispose() {
@@ -382,7 +389,12 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => UnsavedChangesGuard(
+        isDirty: () => _snapshot() != _initialSnapshot,
+        child: _buildForm(context),
+      );
+
+  Widget _buildForm(BuildContext context) {
     return Container(
       width: 700,
       decoration: BoxDecoration(
@@ -420,7 +432,7 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
                           icon: Icons.close_rounded,
                           tooltip: 'Close',
                           size: 36,
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.maybePop(context),
                         ),
                       ],
                     ),
@@ -516,7 +528,7 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
                         AppButton(
                           label: 'Cancel',
                           variant: AppButtonVariant.ghost,
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.maybePop(context),
                         ),
                         const SizedBox(width: 8),
                         AppButton(
