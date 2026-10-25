@@ -184,22 +184,17 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
                       duration: const Duration(milliseconds: 200),
                       child: Row(
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 18),
-                            color: AppColors.primary,
-                            onPressed: () => _showItemForm(context, item),
+                          IconActionButton(
+                            icon: Icons.edit_outlined,
                             tooltip: 'Edit',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                            onPressed: () => _showItemForm(context, item),
                           ),
-                          const SizedBox(width: 12),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 18),
-                            color: AppColors.danger,
-                            onPressed: () => _confirmDelete(context, item),
+                          const SizedBox(width: 6),
+                          IconActionButton(
+                            icon: Icons.delete_outline_rounded,
                             tooltip: 'Delete',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                            destructive: true,
+                            onPressed: () => _confirmDelete(context, item),
                           ),
                         ],
                       ),

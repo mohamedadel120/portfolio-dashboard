@@ -232,17 +232,17 @@ class _ExpertisePageState extends State<ExpertisePage> {
                       duration: const Duration(milliseconds: 200),
                       child: Row(
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 20),
-                            color: AppColors.primary,
+                          IconActionButton(
+                            icon: Icons.edit_outlined,
+                            tooltip: 'Edit',
                             onPressed: () => _showExpertiseForm(context, skill),
-                            tooltip: 'Edit Skill',
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 20),
-                            color: AppColors.danger,
+                          const SizedBox(width: 6),
+                          IconActionButton(
+                            icon: Icons.delete_outline_rounded,
+                            tooltip: 'Delete',
+                            destructive: true,
                             onPressed: () => _confirmDelete(context, skill),
-                            tooltip: 'Delete Skill',
                           ),
                         ],
                       ),

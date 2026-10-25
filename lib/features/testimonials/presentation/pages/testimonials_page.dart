@@ -170,39 +170,24 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                       duration: const Duration(milliseconds: 200),
                       child: Row(
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 18),
-                            color: AppColors.primary,
+                          IconActionButton(
+                            icon: Icons.edit_outlined,
+                            tooltip: 'Edit',
                             onPressed: () => _showTestimonialForm(context, t),
-                            tooltip: 'Edit Testimonial',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
                           ),
-                          const SizedBox(width: 12),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 18),
-                            color: AppColors.danger,
+                          const SizedBox(width: 6),
+                          IconActionButton(
+                            icon: Icons.delete_outline_rounded,
+                            tooltip: 'Delete',
+                            destructive: true,
                             onPressed: () => _confirmDelete(context, t),
-                            tooltip: 'Delete Testimonial',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
                           ),
                         ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: List.generate(5, (i) {
-                    return Icon(
-                      i < t.rating ? Icons.star_rounded : Icons.star_outline_rounded,
-                      size: 16,
-                      color: i < t.rating ? AppColors.warning : AppColors.textTertiary,
-                    );
-                  }),
-                ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
                 Expanded(
                   child: Text(
                     t.opinion,
@@ -324,7 +309,9 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
   late TextEditingController _companyController;
   late TextEditingController _opinionController;
   late TextEditingController _imageUrlController;
-  int _rating = 5;
+  // No longer edited (the site shows no star ratings); kept so saving an
+  // existing testimonial does not change the stored value.
+  late final int _rating;
 
   @override
   void initState() {
@@ -483,23 +470,6 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
                       controller: _imageUrlController,
                       style: const TextStyle(color: AppColors.ink),
                       decoration: _inputDecoration('e.g. https://domain.com/photo.jpg'),
-                    ),
-                    const SizedBox(height: 20),
-
-                    const Text('Rating', style: TextStyle(color: AppColors.ink, fontSize: 13.5, fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: List.generate(5, (i) {
-                        final filled = i < _rating;
-                        return IconButton(
-                          onPressed: () => setState(() => _rating = i + 1),
-                          icon: Icon(
-                            filled ? Icons.star_rounded : Icons.star_outline_rounded,
-                            color: filled ? AppColors.warning : AppColors.textTertiary,
-                            size: 28,
-                          ),
-                        );
-                      }),
                     ),
                     const SizedBox(height: 20),
 

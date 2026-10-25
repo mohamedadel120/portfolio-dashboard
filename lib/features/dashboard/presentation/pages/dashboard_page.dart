@@ -517,6 +517,19 @@ class _TopProjectRow extends StatelessWidget {
 
 // ── Line chart ────────────────────────────────────────────────────────────────
 
+/// The smallest of 1, 2, 2.5 or 5 times a power of ten that is at least
+/// [rough] (at least 1), so axis labels read 0, 50, 100 rather than 0, 42, 84.
+double _niceStep(double rough) {
+  var power = 1.0;
+  while (power * 10 <= rough) {
+    power *= 10;
+  }
+  for (final m in const [1.0, 2.0, 2.5, 5.0, 10.0]) {
+    if (m * power >= rough) return m * power;
+  }
+  return 10 * power;
+}
+
 class _LineChartWidget extends StatelessWidget {
   final Map<DateTime, int> data;
   const _LineChartWidget({required this.data});
@@ -528,13 +541,20 @@ class _LineChartWidget extends StatelessWidget {
       return FlSpot(e.key.toDouble(), data[e.value]!.toDouble());
     }).toList();
 
+    // A round step for about five gridlines, and a top that is a whole step
+    // above the highest day. With the top at the raw maximum (e.g. 208) its
+    // label printed on top of the "200" label.
+    final highest = spots.fold<double>(0, (m, s) => s.y > m ? s.y : m);
+    final step = _niceStep(highest / 5);
+    final top = ((highest / step).floor() + 1) * step;
+
     return LineChart(
       key: const ValueKey('visits_line_chart'),
       LineChartData(
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: 50,
+          horizontalInterval: step,
           getDrawingHorizontalLine: (value) => FlLine(
             color: AppColors.border,
             strokeWidth: 1,
@@ -577,7 +597,7 @@ class _LineChartWidget extends StatelessWidget {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              interval: 50,
+              interval: step,
               reservedSize: 40,
               getTitlesWidget: (value, meta) => Text(
                 value.toInt().toString(),
@@ -591,10 +611,13 @@ class _LineChartWidget extends StatelessWidget {
         minX: 0,
         maxX: (sortedKeys.length - 1).toDouble(),
         minY: 0,
+        maxY: top,
         lineBarsData: [
           LineChartBarData(
             spots: spots,
             isCurved: true,
+            // A smooth curve must not dip below 0 or above a real value.
+            preventCurveOverShooting: true,
             color: AppColors.primary,
             barWidth: 2.5,
             isStrokeCapRound: true,
