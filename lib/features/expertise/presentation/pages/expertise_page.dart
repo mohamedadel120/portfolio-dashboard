@@ -12,6 +12,7 @@ import '../bloc/expertise_cubit.dart';
 import '../bloc/expertise_state.dart';
 import '../../domain/entities/expertise_entity.dart';
 import '../../data/models/expertise_model.dart';
+import 'package:admin_dashboard/core/widgets/pressable.dart';
 
 class ExpertisePage extends StatefulWidget {
   const ExpertisePage({super.key});
@@ -625,13 +626,17 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
                           children: _colorPresets.map((c) {
                             final hexStr = c.value.toRadixString(16).substring(2).toUpperCase();
                             final isSelected = _colorController.text.replaceAll('#', '').toUpperCase() == hexStr;
-                            return GestureDetector(
+                            return Pressable(
                               onTap: () {
                                 setState(() {
                                   _colorController.text = hexStr;
                                 });
                               },
-                              child: Container(
+                              pressedScale: 0.92,
+                              focusRadius: 999,
+                              semanticLabel: 'Colour #$hexStr',
+                              toggled: isSelected,
+                              builder: (context, _) => Container(
                                 width: 28,
                                 height: 28,
                                 decoration: BoxDecoration(

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:admin_dashboard/core/constants/app_colors.dart';
 import 'package:admin_dashboard/core/demo/demo_mode.dart';
+import 'package:admin_dashboard/core/widgets/pressable.dart';
 
 class MultipleImageUploadField extends StatefulWidget {
   final String label;
@@ -133,9 +134,12 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                 onEnter: (_) => setState(() => _isHoveringDropzone = true),
                 onExit: (_) => setState(() => _isHoveringDropzone = false),
                 cursor: SystemMouseCursors.click,
-                child: GestureDetector(
+                child: Pressable(
                   onTap: _pickAndUploadImages,
-                  child: AnimatedContainer(
+                  pressedScale: 1,
+                  focusRadius: 16,
+                  semanticLabel: 'Upload screenshots',
+                  builder: (context, _) => AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     height: 120,
                     width: double.infinity,
@@ -247,7 +251,7 @@ class _MultipleImageUploadFieldState extends State<MultipleImageUploadField> {
                                         customBorder: const CircleBorder(),
                                         child: const Padding(
                                           padding: EdgeInsets.all(5.0),
-                                          child: Icon(Icons.delete_outline, size: 16, color: AppColors.danger),
+                                          child: Icon(Icons.delete_outline, size: 16, color: AppColors.danger, semanticLabel: 'Remove screenshot'),
                                         ),
                                       ),
                                     ),

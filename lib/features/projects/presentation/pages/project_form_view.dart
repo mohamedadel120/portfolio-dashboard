@@ -1004,6 +1004,8 @@ class _FeaturedSwitch extends StatelessWidget {
     return Pressable(
       onTap: () => onChanged(!value),
       pressedScale: 0.99,
+      semanticLabel: 'Featured project',
+      toggled: value,
       builder: (context, hovered) => AnimatedContainer(
         duration: AppMotion.of(context, AppMotion.fast),
         curve: AppMotion.ease,
@@ -1140,6 +1142,7 @@ class PresetColorRow extends StatelessWidget {
           onTap: () => onSelected(c),
           pressedScale: 0.92,
           semanticLabel: 'Use colour',
+          focusRadius: 999,
           builder: (context, hovered) => AnimatedContainer(
             duration: AppMotion.of(context, AppMotion.fast),
             curve: AppMotion.ease,

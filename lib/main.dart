@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +20,10 @@ import 'features/profile_info/presentation/bloc/profile_info_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // On the web, Flutter only builds the screen reader tree after a hidden
+  // "Enable accessibility" button is pressed. Build it from the start.
+  if (kIsWeb) SemanticsBinding.instance.ensureSemantics();
 
   // Demo mode never talks to Firebase (see core/demo/demo_mode.dart).
   if (!demoMode) {

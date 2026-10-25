@@ -377,6 +377,7 @@ class SurfaceCard extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       pressedScale: 0.99,
+      focusRadius: radius,
       builder: (context, hovered) => card(hovered),
     );
   }

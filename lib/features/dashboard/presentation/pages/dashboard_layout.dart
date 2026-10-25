@@ -66,7 +66,11 @@ class DashboardLayout extends StatelessWidget {
         children: [
           _Sidebar(location: location),
           const VerticalDivider(width: 1, thickness: 1, color: AppColors.border),
-          Expanded(child: child),
+          // The page area's navigator puts a route barrier on top that hides
+          // everything painted before it from screen readers, and the sidebar
+          // is painted first. A separate semantics container keeps the barrier
+          // inside the page area.
+          Expanded(child: Semantics(container: true, child: child)),
         ],
       ),
     );

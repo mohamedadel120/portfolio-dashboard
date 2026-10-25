@@ -29,6 +29,7 @@ class ProjectGridItem extends StatelessWidget {
       onTap: onEdit,
       pressedScale: 0.99,
       semanticLabel: 'Edit ${p.title}',
+      focusRadius: 16,
       builder: (context, hovered) => AnimatedContainer(
         duration: AppMotion.of(context, AppMotion.medium),
         curve: AppMotion.ease,

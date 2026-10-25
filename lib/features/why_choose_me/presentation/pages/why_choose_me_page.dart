@@ -12,6 +12,7 @@ import '../bloc/why_choose_me_cubit.dart';
 import '../bloc/why_choose_me_state.dart';
 import '../../domain/entities/why_choose_me_entity.dart';
 import '../../data/models/why_choose_me_model.dart';
+import 'package:admin_dashboard/core/widgets/pressable.dart';
 
 // Curated icon choices for the picker. Icons are only ever rendered by
 // selecting one of these const values (never constructed from a raw
@@ -485,9 +486,12 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
                       runSpacing: 10,
                       children: _iconOptions.entries.map((entry) {
                         final isSelected = _selectedIcon == entry.value.codePoint;
-                        return GestureDetector(
+                        return Pressable(
                           onTap: () => setState(() => _selectedIcon = entry.value.codePoint),
-                          child: Tooltip(
+                          pressedScale: 0.94,
+                          semanticLabel: 'Icon: ${entry.key}',
+                          toggled: isSelected,
+                          builder: (context, _) => Tooltip(
                             message: entry.key,
                             child: Container(
                               width: 40,
@@ -543,13 +547,17 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
                           children: _colorPresets.map((c) {
                             final hexStr = c.value.toRadixString(16).substring(2).toUpperCase();
                             final isSelected = _colorController.text.replaceAll('#', '').toUpperCase() == hexStr;
-                            return GestureDetector(
+                            return Pressable(
                               onTap: () {
                                 setState(() {
                                   _colorController.text = hexStr;
                                 });
                               },
-                              child: Container(
+                              pressedScale: 0.92,
+                              focusRadius: 999,
+                              semanticLabel: 'Colour #$hexStr',
+                              toggled: isSelected,
+                              builder: (context, _) => Container(
                                 width: 28,
                                 height: 28,
                                 decoration: BoxDecoration(
