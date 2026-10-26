@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:admin_dashboard/core/constants/app_colors.dart';
 import 'package:admin_dashboard/core/demo/demo_mode.dart';
+import 'package:admin_dashboard/core/widgets/pressable.dart';
 
 class ImageUploadField extends StatefulWidget {
   final String label;
@@ -143,11 +144,14 @@ class _ImageUploadFieldState extends State<ImageUploadField> {
               cursor: (!hasImage && !_isUploading)
                   ? SystemMouseCursors.click
                   : SystemMouseCursors.basic,
-              child: GestureDetector(
+              child: Pressable(
                 onTap: (!hasImage && !_isUploading)
                     ? _pickAndUploadImage
                     : null,
-                child: AnimatedContainer(
+                pressedScale: 1,
+                focusRadius: 16,
+                semanticLabel: hasImage ? null : 'Upload image',
+                builder: (context, _) => AnimatedContainer(
                   duration: AppMotion.of(context, AppMotion.medium),
                   curve: AppMotion.ease,
                   height: 180,

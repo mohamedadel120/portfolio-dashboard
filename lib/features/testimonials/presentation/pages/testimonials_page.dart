@@ -1,5 +1,6 @@
 import 'package:admin_dashboard/core/demo/demo_mode.dart';
 import 'package:flutter/material.dart';
+import 'package:admin_dashboard/core/widgets/unsaved_changes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_dashboard/core/constants/app_colors.dart';
 import 'package:admin_dashboard/core/widgets/app_button.dart';
@@ -46,7 +47,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: Padding(
-          padding: const EdgeInsets.fromLTRB(40, 36, 40, 24),
+          padding: pagePadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -90,11 +91,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                         ),
                         child: GridView.builder(
                           padding: const EdgeInsets.all(24),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 20,
-                            mainAxisSpacing: 20,
-                            childAspectRatio: 1.05,
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400, crossAxisSpacing: 20, mainAxisSpacing: 20, mainAxisExtent: 343,
                           ),
                           itemCount: state.testimonials.length,
                           itemBuilder: (context, index) {
@@ -173,39 +170,24 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
                       duration: const Duration(milliseconds: 200),
                       child: Row(
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 18),
-                            color: AppColors.primary,
+                          IconActionButton(
+                            icon: Icons.edit_outlined,
+                            tooltip: 'Edit',
                             onPressed: () => _showTestimonialForm(context, t),
-                            tooltip: 'Edit Testimonial',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
                           ),
-                          const SizedBox(width: 12),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 18),
-                            color: AppColors.danger,
+                          const SizedBox(width: 6),
+                          IconActionButton(
+                            icon: Icons.delete_outline_rounded,
+                            tooltip: 'Delete',
+                            destructive: true,
                             onPressed: () => _confirmDelete(context, t),
-                            tooltip: 'Delete Testimonial',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
                           ),
                         ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: List.generate(5, (i) {
-                    return Icon(
-                      i < t.rating ? Icons.star_rounded : Icons.star_outline_rounded,
-                      size: 16,
-                      color: i < t.rating ? AppColors.warning : AppColors.textTertiary,
-                    );
-                  }),
-                ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
                 Expanded(
                   child: Text(
                     t.opinion,
@@ -228,11 +210,7 @@ class _TestimonialsPageState extends State<TestimonialsPage> {
       highlightColor: AppColors.surface,
       child: GridView.builder(
         padding: const EdgeInsets.all(24),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 20,
-          mainAxisSpacing: 20,
-          childAspectRatio: 1.05,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400, crossAxisSpacing: 20, mainAxisSpacing: 20, mainAxisExtent: 343,
         ),
         itemCount: 6,
         itemBuilder: (context, index) {
@@ -331,7 +309,9 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
   late TextEditingController _companyController;
   late TextEditingController _opinionController;
   late TextEditingController _imageUrlController;
-  int _rating = 5;
+  // No longer edited (the site shows no star ratings); kept so saving an
+  // existing testimonial does not change the stored value.
+  late final int _rating;
 
   @override
   void initState() {
@@ -342,7 +322,13 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
     _opinionController = TextEditingController(text: widget.testimonial?.opinion ?? '');
     _imageUrlController = TextEditingController(text: widget.testimonial?.imageUrl ?? '');
     _rating = widget.testimonial?.rating ?? 5;
+    _initialSnapshot = _snapshot();
   }
+
+  /// Everything the form edits, to tell whether it has unsaved changes.
+  late final String _initialSnapshot;
+
+  String _snapshot() => formSnapshot([_nameController, _roleController, _companyController, _opinionController, _imageUrlController, _rating]);
 
   @override
   void dispose() {
@@ -382,7 +368,12 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => UnsavedChangesGuard(
+        isDirty: () => _snapshot() != _initialSnapshot,
+        child: _buildForm(context),
+      );
+
+  Widget _buildForm(BuildContext context) {
     return Container(
       width: 700,
       decoration: BoxDecoration(
@@ -420,7 +411,7 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
                           icon: Icons.close_rounded,
                           tooltip: 'Close',
                           size: 36,
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.maybePop(context),
                         ),
                       ],
                     ),
@@ -482,23 +473,6 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
                     ),
                     const SizedBox(height: 20),
 
-                    const Text('Rating', style: TextStyle(color: AppColors.ink, fontSize: 13.5, fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: List.generate(5, (i) {
-                        final filled = i < _rating;
-                        return IconButton(
-                          onPressed: () => setState(() => _rating = i + 1),
-                          icon: Icon(
-                            filled ? Icons.star_rounded : Icons.star_outline_rounded,
-                            color: filled ? AppColors.warning : AppColors.textTertiary,
-                            size: 28,
-                          ),
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 20),
-
                     const Text('Opinion / Review *', style: TextStyle(color: AppColors.ink, fontSize: 13.5, fontWeight: FontWeight.w500)),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -516,7 +490,7 @@ class _TestimonialFormViewState extends State<TestimonialFormView> {
                         AppButton(
                           label: 'Cancel',
                           variant: AppButtonVariant.ghost,
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.maybePop(context),
                         ),
                         const SizedBox(width: 8),
                         AppButton(

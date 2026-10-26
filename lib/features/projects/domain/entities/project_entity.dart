@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:equatable/equatable.dart';
+import 'showcase.dart';
+
+export 'showcase.dart';
 
 class Project extends Equatable {
   final String id; // Required for Admin Dashboard (Firestore Doc ID)
@@ -31,6 +34,12 @@ class Project extends Equatable {
   /// from the title.
   final String? slug;
 
+  /// How the site shows the project (screens, labels, artwork or video).
+  final Showcase showcase;
+
+  /// What each store shows for the app, for the site's store previews.
+  final List<StoreListing> storeListings;
+
   const Project({
     required this.id,
     required this.title,
@@ -51,6 +60,8 @@ class Project extends Equatable {
     this.role,
     this.outcome,
     this.slug,
+    this.showcase = const Showcase(),
+    this.storeListings = const [],
   });
 
   @override
@@ -74,5 +85,7 @@ class Project extends Equatable {
         role,
         outcome,
         slug,
+        showcase,
+        storeListings,
       ];
 }

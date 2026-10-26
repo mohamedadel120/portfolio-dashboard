@@ -13,6 +13,7 @@ import '../../features/why_choose_me/presentation/pages/why_choose_me_page.dart'
 import '../../features/profile_info/presentation/pages/profile_info_page.dart';
 import 'dart:async';
 import '../demo/demo_mode.dart';
+import '../widgets/unsaved_changes.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -93,6 +94,9 @@ GoRouter createRouter(AuthCubit authCubit) {
           GoRoute(
             path: '/profile-info',
             builder: (context, state) => const ProfileInfoPage(),
+            // Leaving with unsaved edits (sidebar, browser back) asks first.
+            onExit: (context, state) async =>
+                !ProfileInfoPage.unsavedChanges.value || await confirmDiscard(context),
           ),
         ],
       ),

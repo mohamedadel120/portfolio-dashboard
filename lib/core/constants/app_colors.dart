@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 /// other accent, and it is used sparingly (dots, stripes, chips).
 class AppColors {
   // Brand
-  static const Color primary = Color(0xFF155E75); // deep teal
+  static const Color primary = Color(0xFF0E7490); // deep teal
   static const Color onPrimary = Color(0xFFFFFFFF);
 
   /// The light direction has a single brand colour; "secondary" is the
@@ -14,12 +14,12 @@ class AppColors {
   static const Color secondary = Color(0xFF0F4A5C);
 
   /// Teal at low alpha, for selected/active backgrounds.
-  static const Color primarySoft = Color(0x14155E75); // ~8%
+  static const Color primarySoft = Color(0x140E7490); // ~8%
 
   // Ground and surfaces
-  static const Color background = Color(0xFFF6F5F1); // warm off-white
+  static const Color background = Color(0xFFF6F6F3); // warm off-white
   static const Color surface = Color(0xFFFFFFFF); // cards, dialogs
-  static const Color surfaceLight = Color(0xFFEEECE6); // subtle fill
+  static const Color surfaceLight = Color(0xFFEDEDE8); // subtle fill
   static const Color subtle = surfaceLight;
 
   // Ink

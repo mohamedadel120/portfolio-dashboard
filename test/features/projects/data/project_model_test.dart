@@ -89,11 +89,11 @@ void main() {
     final m = ProjectModel.fromJson({
       'title': 'x',
       'featured': 'TRUE',
-      'color': '0xFF155E75',
+      'color': '0xFF0E7490',
       'highlight': '  trimmed  ',
     }, 'x');
     expect(m.featured, isTrue);
-    expect(m.color, const Color(0xFF155E75));
+    expect(m.color, const Color(0xFF0E7490));
     expect(m.highlight, 'trimmed');
   });
 

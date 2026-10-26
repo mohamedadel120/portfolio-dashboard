@@ -1,5 +1,6 @@
 import 'package:admin_dashboard/core/demo/demo_mode.dart';
 import 'package:flutter/material.dart';
+import 'package:admin_dashboard/core/widgets/unsaved_changes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_dashboard/core/constants/app_colors.dart';
 import 'package:admin_dashboard/core/widgets/app_button.dart';
@@ -11,6 +12,7 @@ import '../bloc/why_choose_me_cubit.dart';
 import '../bloc/why_choose_me_state.dart';
 import '../../domain/entities/why_choose_me_entity.dart';
 import '../../data/models/why_choose_me_model.dart';
+import 'package:admin_dashboard/core/widgets/pressable.dart';
 
 // Curated icon choices for the picker. Icons are only ever rendered by
 // selecting one of these const values (never constructed from a raw
@@ -78,7 +80,7 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: Padding(
-          padding: const EdgeInsets.fromLTRB(40, 36, 40, 24),
+          padding: pagePadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -122,11 +124,7 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
                         ),
                         child: GridView.builder(
                           padding: const EdgeInsets.all(24),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 20,
-                            mainAxisSpacing: 20,
-                            childAspectRatio: 1.6,
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400, crossAxisSpacing: 20, mainAxisSpacing: 20, mainAxisExtent: 225,
                           ),
                           itemCount: state.items.length,
                           itemBuilder: (context, index) {
@@ -186,22 +184,17 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
                       duration: const Duration(milliseconds: 200),
                       child: Row(
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 18),
-                            color: AppColors.primary,
-                            onPressed: () => _showItemForm(context, item),
+                          IconActionButton(
+                            icon: Icons.edit_outlined,
                             tooltip: 'Edit',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                            onPressed: () => _showItemForm(context, item),
                           ),
-                          const SizedBox(width: 12),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 18),
-                            color: AppColors.danger,
-                            onPressed: () => _confirmDelete(context, item),
+                          const SizedBox(width: 6),
+                          IconActionButton(
+                            icon: Icons.delete_outline_rounded,
                             tooltip: 'Delete',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                            destructive: true,
+                            onPressed: () => _confirmDelete(context, item),
                           ),
                         ],
                       ),
@@ -242,11 +235,7 @@ class _WhyChooseMePageState extends State<WhyChooseMePage> {
       highlightColor: AppColors.surface,
       child: GridView.builder(
         padding: const EdgeInsets.all(24),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 20,
-          mainAxisSpacing: 20,
-          childAspectRatio: 1.6,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400, crossAxisSpacing: 20, mainAxisSpacing: 20, mainAxisExtent: 225,
         ),
         itemCount: 6,
         itemBuilder: (context, index) {
@@ -346,7 +335,7 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
   late int _selectedIcon;
 
   final List<Color> _colorPresets = [
-    const Color(0xFF155E75),
+    const Color(0xFF0E7490),
     const Color(0xFF4CAF50),
     const Color(0xFFFF9800),
     const Color(0xFFE91E63),
@@ -364,9 +353,15 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
 
     String hexColor = widget.item != null
         ? widget.item!.color.value.toRadixString(16).substring(2).toUpperCase()
-        : '155E75';
+        : '0E7490';
     _colorController = TextEditingController(text: hexColor);
+    _initialSnapshot = _snapshot();
   }
+
+  /// Everything the form edits, to tell whether it has unsaved changes.
+  late final String _initialSnapshot;
+
+  String _snapshot() => formSnapshot([_titleController, _descriptionController, _colorController, _selectedIcon]);
 
   @override
   void dispose() {
@@ -409,7 +404,12 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => UnsavedChangesGuard(
+        isDirty: () => _snapshot() != _initialSnapshot,
+        child: _buildForm(context),
+      );
+
+  Widget _buildForm(BuildContext context) {
     return Container(
       width: 620,
       decoration: BoxDecoration(
@@ -447,7 +447,7 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
                           icon: Icons.close_rounded,
                           tooltip: 'Close',
                           size: 36,
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.maybePop(context),
                         ),
                       ],
                     ),
@@ -481,9 +481,12 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
                       runSpacing: 10,
                       children: _iconOptions.entries.map((entry) {
                         final isSelected = _selectedIcon == entry.value.codePoint;
-                        return GestureDetector(
+                        return Pressable(
                           onTap: () => setState(() => _selectedIcon = entry.value.codePoint),
-                          child: Tooltip(
+                          pressedScale: 0.94,
+                          semanticLabel: 'Icon: ${entry.key}',
+                          toggled: isSelected,
+                          builder: (context, _) => Tooltip(
                             message: entry.key,
                             child: Container(
                               width: 40,
@@ -520,7 +523,7 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
                             decoration: InputDecoration(
                               prefixText: '# ',
                               prefixStyle: const TextStyle(color: AppColors.textTertiary),
-                              hintText: '155E75',
+                              hintText: '0E7490',
                             ),
                             validator: (v) {
                               if (v == null || v.trim().isEmpty) return 'Color is required';
@@ -539,13 +542,17 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
                           children: _colorPresets.map((c) {
                             final hexStr = c.value.toRadixString(16).substring(2).toUpperCase();
                             final isSelected = _colorController.text.replaceAll('#', '').toUpperCase() == hexStr;
-                            return GestureDetector(
+                            return Pressable(
                               onTap: () {
                                 setState(() {
                                   _colorController.text = hexStr;
                                 });
                               },
-                              child: Container(
+                              pressedScale: 0.92,
+                              focusRadius: 999,
+                              semanticLabel: 'Colour #$hexStr',
+                              toggled: isSelected,
+                              builder: (context, _) => Container(
                                 width: 28,
                                 height: 28,
                                 decoration: BoxDecoration(
@@ -570,7 +577,7 @@ class _WhyChooseMeFormViewState extends State<WhyChooseMeFormView> {
                         AppButton(
                           label: 'Cancel',
                           variant: AppButtonVariant.ghost,
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.maybePop(context),
                         ),
                         const SizedBox(width: 8),
                         AppButton(

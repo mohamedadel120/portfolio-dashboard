@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,17 +10,19 @@ import 'package:admin_dashboard/core/widgets/image_upload_field.dart';
 import 'package:admin_dashboard/core/widgets/multiple_image_upload_field.dart';
 import 'package:admin_dashboard/core/widgets/page_parts.dart';
 import 'package:admin_dashboard/core/widgets/pressable.dart';
+import 'package:admin_dashboard/core/widgets/unsaved_changes.dart';
 
 import '../../domain/entities/project_entity.dart';
 import '../../domain/project_slug.dart';
 import '../bloc/projects_cubit.dart';
 import '../bloc/projects_state.dart';
 import '../widgets/project_badges.dart';
+import '../widgets/showcase_editor.dart';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const _kPresetColors = [
-  Color(0xFF155E75), // teal
+  Color(0xFF0E7490), // teal
   Color(0xFF2563EB), // blue
   Color(0xFF6366F1), // indigo
   Color(0xFF7C3AED), // violet
@@ -28,7 +32,7 @@ const _kPresetColors = [
   Color(0xFFDB2777), // pink
 ];
 
-enum _Tab { basic, caseStudy, media, links }
+enum _Tab { basic, caseStudy, media, showcase, links }
 
 const _highlightHelp =
     'One short sentence. Only facts you can stand behind.';
@@ -65,6 +69,8 @@ class _ProjectFormViewState extends State<ProjectFormView> {
   late final TextEditingController _outcomeController;
   late final TextEditingController _slugController;
   late final ValueNotifier<List<String>> _galleryNotifier;
+  late final ValueNotifier<Showcase> _showcaseNotifier;
+  late final ValueNotifier<List<StoreListing>> _listingsNotifier;
   late bool _featured;
 
   Color _previewColor = AppColors.primary;
@@ -78,7 +84,7 @@ class _ProjectFormViewState extends State<ProjectFormView> {
     _techController = TextEditingController(text: p?.tech.join(', ') ?? '');
     _downloadsController = TextEditingController(text: p?.downloads ?? '');
 
-    final hex = p != null ? _colorToHex(p.color) : '155E75';
+    final hex = p != null ? _colorToHex(p.color) : '0E7490';
     _colorController = TextEditingController(text: hex);
     _previewColor = _parseHex(hex) ?? AppColors.primary;
 
@@ -97,7 +103,22 @@ class _ProjectFormViewState extends State<ProjectFormView> {
     _galleryNotifier = ValueNotifier<List<String>>(
       p?.galleryImages != null ? List.from(p!.galleryImages!) : [],
     );
+    _showcaseNotifier = ValueNotifier(p?.showcase ?? const Showcase());
+    _listingsNotifier = ValueNotifier(p?.storeListings ?? const []);
+    _initialSnapshot = _snapshot();
   }
+
+  /// Everything the form edits, to tell whether it has unsaved changes.
+  late final String _initialSnapshot;
+
+  String _snapshot() => formSnapshot([
+        _titleController, _descController, _techController, _downloadsController,
+        _colorController, _imageUrlController, _logoUrlController, _androidUrlController,
+        _iosUrlController, _videoUrlController, _highlightController, _problemController,
+        _roleController, _outcomeController, _slugController, _featured, _galleryNotifier.value,
+        jsonEncode(_showcaseNotifier.value.toJson()),
+        jsonEncode([for (final l in _listingsNotifier.value) l.toJson()]),
+      ]);
 
   @override
   void dispose() {
@@ -121,6 +142,8 @@ class _ProjectFormViewState extends State<ProjectFormView> {
       c.dispose();
     }
     _galleryNotifier.dispose();
+    _showcaseNotifier.dispose();
+    _listingsNotifier.dispose();
     super.dispose();
   }
 
@@ -234,6 +257,12 @@ class _ProjectFormViewState extends State<ProjectFormView> {
       outcome: _nonBlank(_outcomeController),
       // Stored the way the site cleans it, so the URL shown here is exact.
       slug: ProjectSlug.clean(_slugController.text),
+      showcase: _showcaseNotifier.value,
+      // A listing is kept only for a store the project links to.
+      storeListings: [
+        for (final l in _listingsNotifier.value)
+          if (l.store == 'play' ? _nonBlank(_androidUrlController) != null : _nonBlank(_iosUrlController) != null) l,
+      ],
     );
 
     setState(() => _isSaving = true);
@@ -268,7 +297,9 @@ class _ProjectFormViewState extends State<ProjectFormView> {
         }
       },
       builder: (context, state) {
-        return Container(
+        return UnsavedChangesGuard(
+          isDirty: () => !_isSaving && _snapshot() != _initialSnapshot,
+          child: Container(
           width: dialogWidth,
           constraints: BoxConstraints(maxHeight: size.height * 0.92),
           decoration: BoxDecoration(
@@ -295,6 +326,7 @@ class _ProjectFormViewState extends State<ProjectFormView> {
                 _buildFooter(),
               ],
             ),
+          ),
           ),
         );
       },
@@ -341,7 +373,7 @@ class _ProjectFormViewState extends State<ProjectFormView> {
             icon: Icons.close_rounded,
             tooltip: 'Close',
             size: 36,
-            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+            onPressed: _isSaving ? null : () => Navigator.of(context).maybePop(),
           ),
         ],
       ),
@@ -355,13 +387,17 @@ class _ProjectFormViewState extends State<ProjectFormView> {
       (_Tab.basic, 'Basics', Icons.info_outline_rounded),
       (_Tab.caseStudy, 'Case study', Icons.article_outlined),
       (_Tab.media, 'Media', Icons.perm_media_outlined),
+      (_Tab.showcase, 'Showcase', Icons.phone_iphone_rounded),
       (_Tab.links, 'Store links', Icons.storefront_outlined),
     ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 14),
       child: Align(
         alignment: Alignment.centerLeft,
-        child: Container(
+        // Five tabs: on a narrow dialog the bar scrolls sideways.
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Container(
           padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
             color: AppColors.surfaceLight,
@@ -379,6 +415,7 @@ class _ProjectFormViewState extends State<ProjectFormView> {
                 ),
             ],
           ),
+        ),
         ),
       ),
     );
@@ -428,6 +465,14 @@ class _ProjectFormViewState extends State<ProjectFormView> {
         _Tab.basic => _buildBasicTab(),
         _Tab.caseStudy => _buildCaseStudyTab(),
         _Tab.media => _buildMediaTab(),
+        _Tab.showcase => ShowcaseEditor(
+            showcase: _showcaseNotifier,
+            listings: _listingsNotifier,
+            gallery: _galleryNotifier.value,
+            hasPlay: _nonBlank(_androidUrlController) != null,
+            hasIos: _nonBlank(_iosUrlController) != null,
+            hasVideo: _nonBlank(_videoUrlController) != null,
+          ),
         _Tab.links => _buildLinksTab(),
       },
     );
@@ -649,6 +694,13 @@ class _ProjectFormViewState extends State<ProjectFormView> {
 
   // ── Preview card ───────────────────────────────────────────────────────────
 
+  /// The first screen the site will show: the showcase's, else the gallery's.
+  String? get _previewScreen {
+    final screens = _showcaseNotifier.value.screens;
+    if (screens.isNotEmpty) return screens.first.url;
+    return _galleryNotifier.value.isNotEmpty ? _galleryNotifier.value.first : null;
+  }
+
   Widget _buildPreviewCard() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -670,6 +722,8 @@ class _ProjectFormViewState extends State<ProjectFormView> {
             _highlightController,
             _downloadsController,
             _imageUrlController,
+            _showcaseNotifier,
+            _galleryNotifier,
           ]),
           builder: (context, _) {
             final title = _titleController.text.trim();
@@ -703,13 +757,37 @@ class _ProjectFormViewState extends State<ProjectFormView> {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        _imageUrlController.text.isNotEmpty
-                            ? Image.network(
-                                _imageUrlController.text,
-                                fit: BoxFit.cover,
-                                errorBuilder: (c, e, s) => _placeholderCover(),
-                              )
-                            : _placeholderCover(),
+                        // The site's lead screen in a phone, like the card
+                        // in the projects list; else the cover image.
+                        if (_previewScreen case final url?)
+                          ColoredBox(
+                            color: Color.alphaBlend(_previewColor.withValues(alpha: 0.07), AppColors.background),
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 14),
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
+                                child: AspectRatio(
+                                  aspectRatio: 9 / 19.5,
+                                  child: Container(
+                                    padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
+                                    decoration: const BoxDecoration(color: Color(0xFF121212), borderRadius: BorderRadius.vertical(top: Radius.circular(18))),
+                                    child: ClipRRect(
+                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                                      child: Image.network(url, fit: BoxFit.cover, alignment: Alignment.topCenter, errorBuilder: (c, e, s) => _placeholderCover()),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        else if (_imageUrlController.text.isNotEmpty)
+                          Image.network(
+                            _imageUrlController.text,
+                            fit: BoxFit.cover,
+                            errorBuilder: (c, e, s) => _placeholderCover(),
+                          )
+                        else
+                          _placeholderCover(),
                         Positioned(
                           top: 8,
                           left: 8,
@@ -831,7 +909,7 @@ class _ProjectFormViewState extends State<ProjectFormView> {
           AppButton(
             label: 'Cancel',
             variant: AppButtonVariant.ghost,
-            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+            onPressed: _isSaving ? null : () => Navigator.of(context).maybePop(),
           ),
           const SizedBox(width: 8),
           AppButton(
@@ -924,7 +1002,7 @@ class _ProjectFormViewState extends State<ProjectFormView> {
       ),
       validator: (v) {
         if (v == null || v.trim().isEmpty) return null;
-        if (_parseHex(v) == null) return 'Use 6 hex characters, e.g. 155E75';
+        if (_parseHex(v) == null) return 'Use 6 hex characters, e.g. 0E7490';
         return null;
       },
     );
@@ -989,6 +1067,8 @@ class _FeaturedSwitch extends StatelessWidget {
     return Pressable(
       onTap: () => onChanged(!value),
       pressedScale: 0.99,
+      semanticLabel: 'Featured project',
+      toggled: value,
       builder: (context, hovered) => AnimatedContainer(
         duration: AppMotion.of(context, AppMotion.fast),
         curve: AppMotion.ease,
@@ -1125,6 +1205,7 @@ class PresetColorRow extends StatelessWidget {
           onTap: () => onSelected(c),
           pressedScale: 0.92,
           semanticLabel: 'Use colour',
+          focusRadius: 999,
           builder: (context, hovered) => AnimatedContainer(
             duration: AppMotion.of(context, AppMotion.fast),
             curve: AppMotion.ease,

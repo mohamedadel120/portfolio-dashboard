@@ -1,5 +1,6 @@
 import 'package:admin_dashboard/core/demo/demo_mode.dart';
 import 'package:flutter/material.dart';
+import 'package:admin_dashboard/core/widgets/unsaved_changes.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:admin_dashboard/core/constants/app_colors.dart';
 import 'package:admin_dashboard/core/widgets/app_button.dart';
@@ -11,6 +12,7 @@ import '../bloc/expertise_cubit.dart';
 import '../bloc/expertise_state.dart';
 import '../../domain/entities/expertise_entity.dart';
 import '../../data/models/expertise_model.dart';
+import 'package:admin_dashboard/core/widgets/pressable.dart';
 
 class ExpertisePage extends StatefulWidget {
   const ExpertisePage({super.key});
@@ -48,7 +50,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: Padding(
-          padding: const EdgeInsets.fromLTRB(40, 36, 40, 24),
+          padding: pagePadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -145,11 +147,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
                               ),
                               child: GridView.builder(
                                 padding: const EdgeInsets.all(24),
-                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 3,
-                                  crossAxisSpacing: 24,
-                                  mainAxisSpacing: 24,
-                                  childAspectRatio: 2.2,
+                                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400, crossAxisSpacing: 24, mainAxisSpacing: 24, mainAxisExtent: 162,
                                 ),
                                 itemCount: filteredSkills.length,
                                 itemBuilder: (context, index) {
@@ -234,17 +232,17 @@ class _ExpertisePageState extends State<ExpertisePage> {
                       duration: const Duration(milliseconds: 200),
                       child: Row(
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 20),
-                            color: AppColors.primary,
+                          IconActionButton(
+                            icon: Icons.edit_outlined,
+                            tooltip: 'Edit',
                             onPressed: () => _showExpertiseForm(context, skill),
-                            tooltip: 'Edit Skill',
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 20),
-                            color: AppColors.danger,
+                          const SizedBox(width: 6),
+                          IconActionButton(
+                            icon: Icons.delete_outline_rounded,
+                            tooltip: 'Delete',
+                            destructive: true,
                             onPressed: () => _confirmDelete(context, skill),
-                            tooltip: 'Delete Skill',
                           ),
                         ],
                       ),
@@ -297,11 +295,7 @@ class _ExpertisePageState extends State<ExpertisePage> {
       highlightColor: AppColors.surface,
       child: GridView.builder(
         padding: const EdgeInsets.all(24),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 24,
-          mainAxisSpacing: 24,
-          childAspectRatio: 2.2,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 400, crossAxisSpacing: 24, mainAxisSpacing: 24, mainAxisExtent: 162,
         ),
         itemCount: 6,
         itemBuilder: (context, index) {
@@ -403,7 +397,7 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
   final List<String> _categoryPresets = ['Mobile', 'Frontend', 'Backend', 'DevOps', 'Design', 'Other'];
   
   final List<Color> _colorPresets = [
-    const Color(0xFF155E75), // Teal
+    const Color(0xFF0E7490), // Teal
     const Color(0xFF4CAF50), // Green
     const Color(0xFFFF9800), // Orange
     const Color(0xFFE91E63), // Pink
@@ -421,9 +415,15 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
 
     String hexColor = widget.skill != null
         ? widget.skill!.color.value.toRadixString(16).substring(2).toUpperCase()
-        : '155E75';
+        : '0E7490';
     _colorController = TextEditingController(text: hexColor);
+    _initialSnapshot = _snapshot();
   }
+
+  /// Everything the form edits, to tell whether it has unsaved changes.
+  late final String _initialSnapshot;
+
+  String _snapshot() => formSnapshot([_titleController, _categoryController, _colorController, _percentage]);
 
   @override
   void dispose() {
@@ -461,7 +461,12 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => UnsavedChangesGuard(
+        isDirty: () => _snapshot() != _initialSnapshot,
+        child: _buildForm(context),
+      );
+
+  Widget _buildForm(BuildContext context) {
     return Container(
       width: 600,
       decoration: BoxDecoration(
@@ -500,7 +505,7 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
                           icon: Icons.close_rounded,
                           tooltip: 'Close',
                           size: 36,
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.maybePop(context),
                         ),
                       ],
                     ),
@@ -601,7 +606,7 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
                             decoration: InputDecoration(
                               prefixText: '# ',
                               prefixStyle: const TextStyle(color: AppColors.textTertiary),
-                              hintText: '155E75',
+                              hintText: '0E7490',
                             ),
                             validator: (v) {
                               if (v == null || v.trim().isEmpty) return 'Color is required';
@@ -621,13 +626,17 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
                           children: _colorPresets.map((c) {
                             final hexStr = c.value.toRadixString(16).substring(2).toUpperCase();
                             final isSelected = _colorController.text.replaceAll('#', '').toUpperCase() == hexStr;
-                            return GestureDetector(
+                            return Pressable(
                               onTap: () {
                                 setState(() {
                                   _colorController.text = hexStr;
                                 });
                               },
-                              child: Container(
+                              pressedScale: 0.92,
+                              focusRadius: 999,
+                              semanticLabel: 'Colour #$hexStr',
+                              toggled: isSelected,
+                              builder: (context, _) => Container(
                                 width: 28,
                                 height: 28,
                                 decoration: BoxDecoration(
@@ -653,7 +662,7 @@ class _ExpertiseFormViewState extends State<ExpertiseFormView> {
                         AppButton(
                           label: 'Cancel',
                           variant: AppButtonVariant.ghost,
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.maybePop(context),
                         ),
                         const SizedBox(width: 8),
                         AppButton(

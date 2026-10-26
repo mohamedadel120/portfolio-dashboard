@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../domain/entities/showcase.dart';
 import '../models/project_model.dart';
 import 'projects_remote_data_source.dart';
 
@@ -35,6 +36,23 @@ class MockProjectsRemoteDataSource implements ProjectsRemoteDataSource {
       androidStoreUrl: 'https://play.google.com/store/apps/details?id=demo2',
       iosStoreUrl: 'https://apps.apple.com/app/id000000',
       sortOrder: 1,
+      // Public screenshots, so the showcase editor has something to label.
+      galleryImages: [
+        'https://i.ibb.co/k6hStQLN/stock-home.webp',
+        'https://i.ibb.co/mV16SBYP/stock-list.webp',
+        'https://i.ibb.co/xrYYxJz/stock-3.webp',
+      ],
+      showcase: Showcase(mode: ShowcaseMode.screens, screens: [
+        ShowcaseScreen(url: 'https://i.ibb.co/k6hStQLN/stock-home.webp', caption: 'Home', notes: [
+          ScreenNote(label: 'SearchAppBar', y: 13),
+          ScreenNote(label: 'CategoryGrid', y: 55),
+          ScreenNote(label: 'CartBar', y: 93),
+        ]),
+        ShowcaseScreen(url: 'https://i.ibb.co/mV16SBYP/stock-list.webp', caption: 'Product list'),
+      ]),
+      storeListings: [
+        StoreListing(store: 'play', title: 'Demo listing', developer: 'Demo developer', iconUrl: 'https://i.ibb.co/nWfSZhX/icon-stock-play.webp'),
+      ],
     ),
     const ProjectModel(
       id: 'demo-drugza',
@@ -104,6 +122,8 @@ class MockProjectsRemoteDataSource implements ProjectsRemoteDataSource {
           role: p.role,
           outcome: p.outcome,
           slug: p.slug,
+          showcase: p.showcase,
+          storeListings: p.storeListings,
         );
       }
     }
