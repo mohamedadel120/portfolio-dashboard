@@ -22,6 +22,8 @@ class ProjectModel extends Project {
     super.role,
     super.outcome,
     super.slug,
+    super.showcase,
+    super.storeListings,
   });
 
   factory ProjectModel.fromEntity(Project entity) => ProjectModel(
@@ -44,6 +46,8 @@ class ProjectModel extends Project {
         role: entity.role,
         outcome: entity.outcome,
         slug: entity.slug,
+        showcase: entity.showcase,
+        storeListings: entity.storeListings,
       );
 
   factory ProjectModel.fromJson(Map<String, dynamic> json, String id) {
@@ -69,6 +73,8 @@ class ProjectModel extends Project {
       role: nonBlank(json['role']),
       outcome: nonBlank(json['outcome']),
       slug: nonBlank(json['slug']),
+      showcase: Showcase.fromJson(json['showcase']),
+      storeListings: StoreListing.listFromJson(json['storeListings']),
     );
   }
 
@@ -94,6 +100,8 @@ class ProjectModel extends Project {
       'role': nonBlank(role),
       'outcome': nonBlank(outcome),
       'slug': nonBlank(slug),
+      'showcase': showcase.toJson(),
+      'storeListings': storeListings.isEmpty ? null : [for (final l in storeListings) l.toJson()],
     };
   }
 

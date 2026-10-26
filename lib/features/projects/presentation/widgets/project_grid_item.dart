@@ -73,10 +73,17 @@ class _Cover extends StatelessWidget {
     final p = project;
     final hasCover = p.imageUrl != null && p.imageUrl!.isNotEmpty;
     final isLive = p.androidStoreUrl != null || p.iosStoreUrl != null;
+    // The first screen the site shows (showcase, else the gallery), in a
+    // phone: the card looks like the project's stage on the site.
+    final screen = p.showcase.screens.isNotEmpty
+        ? p.showcase.screens.first.url
+        : (p.galleryImages?.isNotEmpty ?? false) ? p.galleryImages!.first : null;
     return Stack(
       fit: StackFit.expand,
       children: [
-        if (hasCover)
+        if (screen != null)
+          _PhoneCover(project: p, url: screen)
+        else if (hasCover)
           Image.network(
             p.imageUrl!,
             fit: BoxFit.cover,
@@ -104,6 +111,41 @@ class _Cover extends StatelessWidget {
             child: DownloadsBadge(label: p.downloads),
           ),
       ],
+    );
+  }
+}
+
+class _PhoneCover extends StatelessWidget {
+  final Project project;
+  final String url;
+  const _PhoneCover({required this.project, required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    final art = project.showcase.mode == ShowcaseMode.art;
+    return ColoredBox(
+      color: Color.alphaBlend(project.color.withValues(alpha: 0.07), AppColors.background),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(0, 18, 0, 0),
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: AspectRatio(
+            aspectRatio: 9 / 19.5,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(art ? 0 : 5, art ? 0 : 5, art ? 0 : 5, 0),
+              decoration: BoxDecoration(
+                color: art ? Colors.transparent : const Color(0xFF121212),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+                boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 24, offset: Offset(0, 10), spreadRadius: -8)],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(art ? 22 : 17)),
+                child: Image.network(url, fit: BoxFit.cover, alignment: Alignment.topCenter, errorBuilder: (ctx, e, s) => _Placeholder(project: project)),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
